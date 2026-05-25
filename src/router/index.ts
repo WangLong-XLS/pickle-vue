@@ -1,25 +1,37 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import { createRouter, createWebHistory } from "vue-router";
+import AppLayout from "@/views/AppLayout.vue";
+import LoginView from "@/views/login/LoginView.vue";
+import HomeView from "@/views/hom/HomeView.vue";
+import SysUserView from "@/views/sys/SysUserView.vue";
 
-const routes: Array<RouteRecordRaw> = [
+// 确保所有组件都存在
+const routes = [
   {
-    path: "/",
-    name: "home",
-    component: HomeView,
+    path: "/login",
+    name: "login",
+    component: LoginView,
   },
   {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+    path: "/",
+    component: AppLayout,
+    redirect: "/home",
+    children: [
+      {
+        path: "home",
+        name: "home",
+        component: HomeView,
+      },
+      {
+        path: "sysUser",
+        name: "sysUser",
+        component: SysUserView,
+      },
+    ],
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
