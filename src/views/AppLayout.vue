@@ -47,18 +47,18 @@
                 <el-menu-item index="/sysUser">用户信息</el-menu-item>
                 <el-menu-item index="/sysRole">角色信息</el-menu-item>
                 <el-menu-item index="/sysAdOrg">机构管理</el-menu-item>
-                <el-menu-item index="/ggCodeTypeTab">自定义档案</el-menu-item>
               </el-menu-item-group>
             </el-sub-menu>
 
             <el-sub-menu index="3">
               <template #title>
                 <el-icon><Location /></el-icon>
-                <span>信息管理</span>
+                <span>场地管理</span>
               </template>
               <el-menu-item-group>
-                <el-menu-item index="/book">图书信息</el-menu-item>
-                <el-menu-item index="/type">图书分类</el-menu-item>
+                <el-menu-item index="/wxCdCdxx">场地信息</el-menu-item>
+                <el-menu-item index="/wxCdCcxx">场次信息</el-menu-item>
+                <el-menu-item index="/wxCdYyjl">场地预约记录</el-menu-item>
               </el-menu-item-group>
             </el-sub-menu>
 

@@ -3,6 +3,11 @@ import AppLayout from "@/views/AppLayout.vue";
 import LoginView from "@/views/login/LoginView.vue";
 import HomeView from "@/views/hom/HomeView.vue";
 import SysUserView from "@/views/sys/SysUserView.vue";
+import SysRoleView from "@/views/sys/SysRoleView.vue";
+import SysAdOrgView from "@/views/sys/SysAdOrgView.vue";
+import WxCdCdxxView from "@/views/venue/WxCdCdxxView.vue";
+import WxCdCcxxView from "@/views/venue/WxCdCcxxView.vue";
+import WxCdYyjlView from "@/views/venue/WxCdYyjlView.vue";
 
 // 确保所有组件都存在
 const routes = [
@@ -25,6 +30,31 @@ const routes = [
         path: "sysUser",
         name: "sysUser",
         component: SysUserView,
+      },
+      {
+        path: "sysRole",
+        name: "sysRole",
+        component: SysRoleView,
+      },
+      {
+        path: "sysAdOrg",
+        name: "sysAdOrg",
+        component: SysAdOrgView,
+      },
+      {
+        path: "wxCdCdxx",
+        name: "wxCdCdxx",
+        component: WxCdCdxxView,
+      },
+      {
+        path: "wxCdCcxx",
+        name: "wxCdCcxx",
+        component: WxCdCcxxView,
+      },
+      {
+        path: "wxCdYyjl",
+        name: "wxCdYyjl",
+        component: WxCdYyjlView,
       },
     ],
   },

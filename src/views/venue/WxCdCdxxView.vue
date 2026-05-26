@@ -61,12 +61,9 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" />
-        <el-table-column prop="userName" label="用户名" />
-        <el-table-column prop="userAge" label="用户年龄" />
-        <el-table-column prop="userSexName" label="用户性别" />
-        <el-table-column prop="userPhone" label="用户手机号" />
-        <el-table-column prop="orgName" label="所属机构" />
-        <el-table-column prop="roleName" label="角色名称" />
+        <el-table-column prop="cdMc" label="场地名称" />
+        <el-table-column prop="cdGdRs" label="场地规定人数" />
+        <el-table-column prop="bz" label="备注" />
       </el-table>
     </div>
 
@@ -74,9 +71,9 @@
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="sysUser.pageNum"
+        :current-page="wxCdCdxx.pageNum"
         :page-sizes="[20, 50, 100, 200]"
-        :page-size="sysUser.pageSize"
+        :page-size="wxCdCdxx.pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
       >
@@ -93,83 +90,30 @@
         <el-form :model="from" :rules="rules" ref="formRef">
           <div class="form-row">
             <div class="form-col">
-              <el-form-item label="用户名：" label-width="40%" prop="userName">
+              <el-form-item label="场地名称：" label-width="40%" prop="cdMc">
                 <el-input
-                  v-model="from.userName"
+                  v-model="from.cdMc"
                   autocomplete="off"
                   style="width: 70%"
                 ></el-input>
               </el-form-item>
-              <el-form-item label="用户年龄：" label-width="40%" prop="userAge">
+              <el-form-item label="场地规定人数：" label-width="40%" prop="bz">
                 <el-input
-                  v-model="from.userAge"
+                  v-model.number="from.cdGdRs"
                   autocomplete="off"
                   style="width: 70%"
+                  type="number"
                 ></el-input>
-              </el-form-item>
-              <el-form-item label="用户手机号：" label-width="40%">
-                <el-input
-                  v-model="from.userPhone"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item
-                label="关联角色："
-                label-width="40%"
-                prop="roleUuid"
-              >
-                <el-select
-                  v-model="from.roleUuid"
-                  placeholder="请选择角色"
-                  style="width: 70%"
-                >
-                  <el-option
-                    v-for="item in roleMap"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
               </el-form-item>
             </div>
 
             <div class="form-col">
-              <el-form-item
-                label="用户密码"
-                label-width="40%"
-                prop="userPassword"
-              >
+              <el-form-item label="备注：" label-width="40%" prop="bz">
                 <el-input
-                  v-model="from.userPassword"
+                  v-model="from.bz"
                   autocomplete="off"
                   style="width: 70%"
-                  show-password
                 ></el-input>
-              </el-form-item>
-              <el-form-item label="用户性别：" label-width="40%">
-                <el-select
-                  v-model="from.userSex"
-                  placeholder="请选择性别"
-                  style="width: 70%"
-                >
-                  <el-option label="男" value="M" />
-                  <el-option label="女" value="W" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="所属机构：" label-width="40%" prop="orgCode">
-                <el-select
-                  v-model="from.orgCode"
-                  placeholder="请选择机构"
-                  style="width: 70%"
-                >
-                  <el-option
-                    v-for="item in orgMap"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
               </el-form-item>
             </div>
           </div>
@@ -190,10 +134,10 @@
         width="30%"
         :close-on-click-modal="false"
       >
-        <el-form :model="sysUser">
+        <el-form :model="wxCdCdxx">
           <el-form-item label="用户名：" label-width="25%">
             <el-input
-              v-model="sysUser.userName"
+              v-model="wxCdCdxx.userName"
               autocomplete="off"
               style="width: 50%"
             ></el-input>
@@ -324,7 +268,7 @@ export default {
     }
 
     return {
-      sysUser: {
+      wxCdCdxx: {
         userName: "",
         userPhone: "",
         pageNum: 1,
@@ -373,7 +317,7 @@ export default {
     },
 
     queryPageList() {
-      request.post("sysUser/queryPageList", this.sysUser).then((res) => {
+      request.post("wxCdCdxx/queryPageList", this.wxCdCdxx).then((res) => {
         if (res.code === 201) {
           this.tableData = res.data.list;
           this.total = res.data.total;
@@ -385,7 +329,7 @@ export default {
     },
 
     reset() {
-      this.sysUser = {
+      this.wxCdCdxx = {
         userName: "",
         userPhone: "",
         pageNum: 1,
@@ -395,12 +339,12 @@ export default {
     },
 
     handleSizeChange(pageSize) {
-      this.sysUser.pageSize = pageSize;
+      this.wxCdCdxx.pageSize = pageSize;
       this.queryPageList();
     },
 
     handleCurrentChange(pageNum) {
-      this.sysUser.pageNum = pageNum;
+      this.wxCdCdxx.pageNum = pageNum;
       this.queryPageList();
     },
 
@@ -425,7 +369,7 @@ export default {
       this.saveOrUpdateTitle = "新增";
       this.from = {};
       this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysUser/save";
+      this.saveOrUpdateFlag = "wxCdCdxx/save";
     },
 
     update() {
@@ -442,7 +386,7 @@ export default {
       this.from = JSON.parse(JSON.stringify(this.dataBean));
       this.originalData = JSON.parse(JSON.stringify(this.dataBean));
       this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysUser/update";
+      this.saveOrUpdateFlag = "wxCdCdxx/update";
     },
 
     submit() {
@@ -477,7 +421,7 @@ export default {
       const data = {
         userUuidIn: this.userUuidIn,
       };
-      request.post("sysUser/delete", data).then((res) => {
+      request.post("wxCdCdxx/delete", data).then((res) => {
         if (res.code === 201) {
           this.$message({
             message: res.message,
@@ -493,12 +437,12 @@ export default {
 
     excelData() {
       const excelData = {
-        userName: this.sysUser.userName,
-        userPhone: this.sysUser.userPhone,
+        userName: this.wxCdCdxx.userName,
+        userPhone: this.wxCdCdxx.userPhone,
         userUuidIn: this.userUuidIn,
       };
 
-      request.post("sysUser/exportExcel", excelData, {
+      request.post("wxCdCdxx/exportExcel", excelData, {
         responseType: "blob",
       });
     },

@@ -5,6 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import router from "@/router";
+import { ElMessage } from "element-plus";
 
 // 定义响应数据的类型
 interface ResponseData<T = unknown> {
@@ -72,9 +73,10 @@ service.interceptors.response.use(
 
     // 处理 401 未授权
     if (res.code === 401) {
+      // 1. 清除本地存储
       localStorage.removeItem("user");
 
-      // 防止重复跳转
+      // 3. 防止重复跳转
       if (!isRedirecting) {
         isRedirecting = true;
         router.push("/login").finally(() => {
@@ -84,12 +86,19 @@ service.interceptors.response.use(
         });
       }
 
-      return Promise.reject(new Error("未授权，请重新登录"));
+      // 4. 关键修改：返回普通对象而不是 reject
+      //    这样既能在控制台看到错误（因为后端返回了），又不会出现 Promise 未捕获的报错
+      return {
+        code: 401,
+        message: res.message,
+        data: null,
+      };
     }
 
     return res;
   },
-  (error: any) => {
+  (error: unknown) => {
+    // 其他错误继续抛出
     console.log("响应拦截器错误: " + error);
     return Promise.reject(error);
   }
