@@ -18,18 +18,19 @@
           <el-icon><Delete /></el-icon>
           <p>删除</p>
         </button>
-        <button @click="excelData()">
+        <button @click="excelData()" :disabled="exportLoading">
           <el-icon><Download /></el-icon>
-          <p>导出</p>
+          <p>{{ exportLoading ? "导出中..." : "导出" }}</p>
         </button>
 
-        <!-- 导入按钮 -->
+        <!-- 导入按钮 - 修复接口地址 -->
         <el-upload
           class="import-upload"
-          action="http://localhost:8888/pickle/sysAdOrg/importExcel"
+          action="http://localhost:8888/pickle/wxCdCcxx/importExcel"
           :headers="{ token: token }"
           accept=".xlsx, .xls"
           :on-success="importData"
+          :on-error="importError"
           :show-file-list="false"
         >
           <button>
@@ -61,12 +62,11 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" />
-        <el-table-column prop="userName" label="用户名" />
-        <el-table-column prop="userAge" label="用户年龄" />
-        <el-table-column prop="userSexName" label="用户性别" />
-        <el-table-column prop="userPhone" label="用户手机号" />
-        <el-table-column prop="orgName" label="所属机构" />
-        <el-table-column prop="roleName" label="角色名称" />
+        <el-table-column prop="cdMc" label="场地名称" />
+        <el-table-column prop="ccSd" label="场次时段" />
+        <el-table-column prop="cdDj" label="场地单价" />
+        <el-table-column prop="hjtBzMc" label="是否黄金天" />
+        <el-table-column prop="pxh" label="排序号" />
       </el-table>
     </div>
 
@@ -74,9 +74,9 @@
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="sysUser.pageNum"
+        :current-page="wxCdCcxx.pageNum"
         :page-sizes="[20, 50, 100, 200]"
-        :page-size="sysUser.pageSize"
+        :page-size="wxCdCcxx.pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
       >
@@ -93,82 +93,58 @@
         <el-form :model="from" :rules="rules" ref="formRef">
           <div class="form-row">
             <div class="form-col">
-              <el-form-item label="用户名：" label-width="40%" prop="userName">
-                <el-input
-                  v-model="from.userName"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="用户年龄：" label-width="40%" prop="userAge">
-                <el-input
-                  v-model="from.userAge"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="用户手机号：" label-width="40%">
-                <el-input
-                  v-model="from.userPhone"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
               <el-form-item
-                label="关联角色："
+                label="场地名称："
                 label-width="40%"
-                prop="roleUuid"
+                prop="cdxxUuid"
               >
                 <el-select
-                  v-model="from.roleUuid"
-                  placeholder="请选择角色"
+                  v-model="from.cdxxUuid"
+                  placeholder=""
                   style="width: 70%"
+                  clearable
                 >
                   <el-option
-                    v-for="item in roleMap"
+                    v-for="item in cdxxMap"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
                   />
                 </el-select>
+              </el-form-item>
+              <el-form-item label="场地单价：" label-width="40%" prop="cdDj">
+                <el-input
+                  v-model="from.cdDj"
+                  autocomplete="off"
+                  type="number"
+                  style="width: 70%"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="排序号：" label-width="40%" prop="pxh">
+                <el-input
+                  v-model="from.pxh"
+                  autocomplete="off"
+                  style="width: 70%"
+                ></el-input>
               </el-form-item>
             </div>
 
             <div class="form-col">
-              <el-form-item
-                label="用户密码"
-                label-width="40%"
-                prop="userPassword"
-              >
+              <el-form-item label="场次时段：" label-width="40%" prop="ccSd">
                 <el-input
-                  v-model="from.userPassword"
+                  v-model="from.ccSd"
                   autocomplete="off"
                   style="width: 70%"
-                  show-password
                 ></el-input>
               </el-form-item>
-              <el-form-item label="用户性别：" label-width="40%">
+              <el-form-item label="是否黄金天：" label-width="40%" prop="hjtBz">
                 <el-select
-                  v-model="from.userSex"
-                  placeholder="请选择性别"
+                  v-model="from.hjtBz"
+                  placeholder=""
                   style="width: 70%"
                 >
-                  <el-option label="男" value="M" />
-                  <el-option label="女" value="W" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="所属机构：" label-width="40%" prop="orgCode">
-                <el-select
-                  v-model="from.orgCode"
-                  placeholder="请选择机构"
-                  style="width: 70%"
-                >
-                  <el-option
-                    v-for="item in orgMap"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+                  <el-option label="是" value="Y" />
+                  <el-option label="否" value="N" />
                 </el-select>
               </el-form-item>
             </div>
@@ -190,13 +166,31 @@
         width="30%"
         :close-on-click-modal="false"
       >
-        <el-form :model="sysUser">
-          <el-form-item label="用户名：" label-width="25%">
-            <el-input
-              v-model="sysUser.userName"
-              autocomplete="off"
-              style="width: 50%"
-            ></el-input>
+        <el-form :model="wxCdCcxx">
+          <el-form-item label="场地名称：" label-width="25%">
+            <el-select
+              v-model="wxCdCcxx.cdxxUuid"
+              placeholder=""
+              style="width: 70%"
+              clearable
+            >
+              <el-option
+                v-for="item in cdxxMap"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="是否黄金天：" label-width="25%">
+            <el-select
+              v-model="wxCdCcxx.hjtBz"
+              placeholder=""
+              style="width: 70%"
+            >
+              <el-option label="是" value="Y" />
+              <el-option label="否" value="N" />
+            </el-select>
           </el-form-item>
         </el-form>
         <template #footer>
@@ -264,31 +258,6 @@
 }
 </style>
 
-<style>
-/* 全局样式 - 确保对话框圆角和居中生效 */
-.el-dialog {
-  border-radius: 15px !important;
-  overflow: hidden !important;
-}
-
-.el-dialog__header {
-  border-radius: 15px 15px 0 0 !important;
-}
-
-.el-dialog__footer {
-  border-radius: 0 0 15px 15px !important;
-}
-
-.el-overlay-dialog {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.el-dialog {
-  margin: 0 !important;
-}
-</style>
 <script>
 import request from "@/utils/request";
 import {
@@ -301,7 +270,7 @@ import {
 } from "@element-plus/icons-vue";
 
 export default {
-  name: "SysUserView",
+  name: "WxCdCdxxView", // 修正组件名称
   components: {
     UploadFilled,
     Search,
@@ -311,7 +280,6 @@ export default {
     Download,
   },
   data() {
-    // 安全获取 token
     let token = "";
     try {
       const userStr = localStorage.getItem("user");
@@ -324,9 +292,9 @@ export default {
     }
 
     return {
-      sysUser: {
-        userName: "",
-        userPhone: "",
+      wxCdCcxx: {
+        cdxxUuid: "",
+        hjtBz: "",
         pageNum: 1,
         pageSize: 20,
       },
@@ -339,20 +307,23 @@ export default {
       saveOrUpdateTitle: "",
       from: {},
       originalData: {},
-      userUuidIn: [],
+      ccyyUuidIn: [],
       dataBean: {},
       token: token,
       orgMap: [],
       roleMap: [],
+      cdxxMap: [],
+      exportLoading: false, // 新增：导出loading状态
       rules: {
-        userName: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
+        cdxxUuid: [
+          { required: true, message: "请选择场地名称", trigger: "blur" },
         ],
-        userPassword: [
-          { required: true, message: "请输入用户密码", trigger: "blur" },
+        ccSd: [{ required: true, message: "请输入场次时段", trigger: "blur" }],
+        cdDj: [{ required: true, message: "请输入场地单价", trigger: "blur" }],
+        hjtBz: [
+          { required: true, message: "请选择是否黄金天", trigger: "blur" },
         ],
-        orgCode: [{ required: true, message: "请选择机构", trigger: "blur" }],
-        userAge: [{ validator: this.validateAge, trigger: "blur" }],
+        pxh: [{ required: true, message: "请输入排序号", trigger: "blur" }],
       },
     };
   },
@@ -364,16 +335,21 @@ export default {
   methods: {
     load: function () {
       this.queryPageList();
-      this.selectOrgCode2OrgNameMap();
-      this.selectListByBean();
+      this.loadMultipleData();
     },
 
     queryData() {
       this.queryDialogFromFlag = true;
+      this.wxCdCcxx = {
+        cdxxUuid: "",
+        hjtBz: "",
+        pageNum: 1,
+        pageSize: 20,
+      };
     },
 
     queryPageList() {
-      request.post("sysUser/queryPageList", this.sysUser).then((res) => {
+      request.post("wxCdCcxx/queryPageList", this.wxCdCcxx).then((res) => {
         if (res.code === 201) {
           this.tableData = res.data.list;
           this.total = res.data.total;
@@ -385,9 +361,9 @@ export default {
     },
 
     reset() {
-      this.sysUser = {
-        userName: "",
-        userPhone: "",
+      this.wxCdCcxx = {
+        cdxxUuid: "",
+        hjtBz: "",
         pageNum: 1,
         pageSize: 20,
       };
@@ -395,45 +371,28 @@ export default {
     },
 
     handleSizeChange(pageSize) {
-      this.sysUser.pageSize = pageSize;
+      this.wxCdCcxx.pageSize = pageSize;
       this.queryPageList();
     },
 
     handleCurrentChange(pageNum) {
-      this.sysUser.pageNum = pageNum;
+      this.wxCdCcxx.pageNum = pageNum;
       this.queryPageList();
-    },
-
-    validateAge(rule, value, callback) {
-      if (value !== null && value !== "") {
-        let num = Number(value);
-        if (!Number.isInteger(num)) {
-          callback(new Error("年龄必须为整数"));
-        } else if (value < 0) {
-          callback(new Error("年龄不能为负数"));
-        } else if (value > 150) {
-          callback(new Error("年龄不能超过150岁"));
-        } else {
-          callback();
-        }
-      } else {
-        callback();
-      }
     },
 
     save() {
       this.saveOrUpdateTitle = "新增";
       this.from = {};
       this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysUser/save";
+      this.saveOrUpdateFlag = "wxCdCcxx/save";
     },
 
     update() {
-      if (this.userUuidIn.length === 0) {
+      if (this.ccyyUuidIn.length === 0) {
         this.$message.warning("请勾选您要修改的项！");
         return;
       }
-      if (this.userUuidIn.length > 1) {
+      if (this.ccyyUuidIn.length > 1) {
         this.$message.warning("只能选择一条数据修改！");
         return;
       }
@@ -442,7 +401,7 @@ export default {
       this.from = JSON.parse(JSON.stringify(this.dataBean));
       this.originalData = JSON.parse(JSON.stringify(this.dataBean));
       this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysUser/update";
+      this.saveOrUpdateFlag = "wxCdCcxx/update";
     },
 
     submit() {
@@ -455,7 +414,7 @@ export default {
                 type: "success",
               });
               this.dialogFormVisible = false;
-              this.userUuidIn = [];
+              this.ccyyUuidIn = [];
               this.reset();
             } else {
               this.$message.error(res.message);
@@ -469,21 +428,21 @@ export default {
     },
 
     deleteData() {
-      if (this.userUuidIn.length === 0) {
+      if (this.ccyyUuidIn.length === 0) {
         this.$message.warning("请勾选您要删除的项！");
         return;
       }
 
       const data = {
-        userUuidIn: this.userUuidIn,
+        ccyyUuidIn: this.ccyyUuidIn,
       };
-      request.post("sysUser/delete", data).then((res) => {
+      request.post("wxCdCcxx/delete", data).then((res) => {
         if (res.code === 201) {
           this.$message({
             message: res.message,
             type: "success",
           });
-          this.userUuidIn = [];
+          this.ccyyUuidIn = [];
           this.reset();
         } else {
           this.$message.error(res.message);
@@ -491,38 +450,110 @@ export default {
       });
     },
 
-    excelData() {
-      const excelData = {
-        userName: this.sysUser.userName,
-        userPhone: this.sysUser.userPhone,
-        userUuidIn: this.userUuidIn,
-      };
+    // 修复导出方法
+    async excelData() {
+      // 防止重复导出
+      if (this.exportLoading) {
+        return;
+      }
 
-      request.post("sysUser/exportExcel", excelData, {
-        responseType: "blob",
-      });
+      this.exportLoading = true;
+
+      try {
+        const excelData = {
+          cdMc: this.wxCdCcxx.cdMc,
+          ccyyUuidIn: this.ccyyUuidIn,
+          pageNum: this.wxCdCcxx.pageNum,
+          pageSize: this.wxCdCcxx.pageSize,
+        };
+
+        // request.ts 会自动处理 blob 并下载文件
+        await request.post("wxCdCcxx/exportExcel", excelData, {
+          responseType: "blob",
+          fileName: `场地信息_${new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace(/:/g, "-")}.xlsx`,
+        });
+
+        // 导出成功提示（注意：blob响应不会返回code，所以这里直接提示成功）
+        this.$message.success("导出成功");
+      } catch (error) {
+        console.error("导出失败:", error);
+        // 如果后端返回了错误信息（JSON格式），尝试解析
+        if (error.response?.data) {
+          try {
+            const text = await error.response.data.text();
+            const errorData = JSON.parse(text);
+            this.$message.error(errorData.message || "导出失败");
+          } catch (e) {
+            this.$message.error("导出失败，请稍后重试");
+          }
+        } else {
+          this.$message.error(error.message || "导出失败");
+        }
+      } finally {
+        this.exportLoading = false;
+      }
+    },
+
+    importData(res) {
+      if (res.code === 201) {
+        this.$message({
+          message: res.message,
+          type: "success",
+        });
+        this.reset();
+      } else {
+        this.$message.error(res.message);
+      }
+    },
+
+    // 新增：导入失败回调
+    importError(error) {
+      console.error("导入失败:", error);
+      this.$message.error("导入失败，请检查文件格式或网络连接");
     },
 
     handleSelectionChange(val) {
-      this.userUuidIn = [];
+      this.ccyyUuidIn = [];
       val.forEach((item) => {
-        if (item.userUuid) {
-          this.userUuidIn.push(item.userUuid);
+        if (item.ccyyUuid) {
+          this.ccyyUuidIn.push(item.ccyyUuid);
           this.dataBean = item;
         }
       });
     },
 
-    selectOrgCode2OrgNameMap() {
-      request
-        .post("sysAdOrg/selectOrgCode2OrgNameMap", this.from)
-        .then((res) => {
-          if (res.code === 201) {
-            this.orgMap = this.transformOrgData(res.data);
-          } else {
-            this.$message.error(res.message);
-          }
-        });
+    async loadMultipleData() {
+      const [sysAdOrg, sysRole, wxCdCdxx] = await Promise.all([
+        request.post("sysAdOrg/selectOrgCode2OrgNameMap", this.from),
+        request.post("sysRole/selectListByBean", this.from),
+        request.post("wxCdCdxx/selectListByBean", this.from),
+      ]);
+      if (sysAdOrg.code === 201) {
+        this.orgMap = this.transformOrgData(sysAdOrg.data);
+      } else {
+        this.$message.error(sysAdOrg.message);
+      }
+
+      if (sysRole.code === 201) {
+        this.roleMap = sysRole.data.map((item) => ({
+          label: item.roleName,
+          value: item.roleUuid,
+        }));
+      } else {
+        this.$message.error(sysRole.message);
+      }
+
+      if (wxCdCdxx.code === 201) {
+        this.cdxxMap = wxCdCdxx.data.map((item) => ({
+          label: item.cdMc,
+          value: item.cdxxUuid,
+        }));
+      } else {
+        this.$message.error(wxCdCdxx.message);
+      }
     },
 
     transformOrgData(data) {
@@ -531,19 +562,6 @@ export default {
           value: key,
           label: data[key],
         };
-      });
-    },
-
-    selectListByBean() {
-      request.post("sysRole/selectListByBean", this.from).then((res) => {
-        if (res.code === 201) {
-          this.roleMap = res.data.map((item) => ({
-            label: item.roleName,
-            value: item.roleUuid,
-          }));
-        } else {
-          this.$message.error(res.message);
-        }
       });
     },
   },

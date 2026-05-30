@@ -18,18 +18,19 @@
           <el-icon><Delete /></el-icon>
           <p>删除</p>
         </button>
-        <button @click="excelData()">
+        <button @click="excelData()" :disabled="exportLoading">
           <el-icon><Download /></el-icon>
-          <p>导出</p>
+          <p>{{ exportLoading ? "导出中..." : "导出" }}</p>
         </button>
 
-        <!-- 导入按钮 -->
+        <!-- 导入按钮 - 修复接口地址 -->
         <el-upload
           class="import-upload"
-          action="http://localhost:8888/pickle/sysAdOrg/importExcel"
+          action="http://localhost:8888/pickle/wxCdCdxx/importExcel"
           :headers="{ token: token }"
           accept=".xlsx, .xls"
           :on-success="importData"
+          :on-error="importError"
           :show-file-list="false"
         >
           <button>
@@ -97,7 +98,11 @@
                   style="width: 70%"
                 ></el-input>
               </el-form-item>
-              <el-form-item label="场地规定人数：" label-width="40%" prop="bz">
+              <el-form-item
+                label="场地规定人数："
+                label-width="40%"
+                prop="cdGdRs"
+              >
                 <el-input
                   v-model.number="from.cdGdRs"
                   autocomplete="off"
@@ -135,9 +140,9 @@
         :close-on-click-modal="false"
       >
         <el-form :model="wxCdCdxx">
-          <el-form-item label="用户名：" label-width="25%">
+          <el-form-item label="场地名称：" label-width="25%">
             <el-input
-              v-model="wxCdCdxx.userName"
+              v-model="wxCdCdxx.cdMc"
               autocomplete="off"
               style="width: 50%"
             ></el-input>
@@ -208,31 +213,6 @@
 }
 </style>
 
-<style>
-/* 全局样式 - 确保对话框圆角和居中生效 */
-.el-dialog {
-  border-radius: 15px !important;
-  overflow: hidden !important;
-}
-
-.el-dialog__header {
-  border-radius: 15px 15px 0 0 !important;
-}
-
-.el-dialog__footer {
-  border-radius: 0 0 15px 15px !important;
-}
-
-.el-overlay-dialog {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.el-dialog {
-  margin: 0 !important;
-}
-</style>
 <script>
 import request from "@/utils/request";
 import {
@@ -245,7 +225,7 @@ import {
 } from "@element-plus/icons-vue";
 
 export default {
-  name: "SysUserView",
+  name: "WxCdCdxxView", // 修正组件名称
   components: {
     UploadFilled,
     Search,
@@ -255,7 +235,6 @@ export default {
     Download,
   },
   data() {
-    // 安全获取 token
     let token = "";
     try {
       const userStr = localStorage.getItem("user");
@@ -269,8 +248,7 @@ export default {
 
     return {
       wxCdCdxx: {
-        userName: "",
-        userPhone: "",
+        cdMc: "",
         pageNum: 1,
         pageSize: 20,
       },
@@ -283,20 +261,17 @@ export default {
       saveOrUpdateTitle: "",
       from: {},
       originalData: {},
-      userUuidIn: [],
+      cdxxUuidIn: [],
       dataBean: {},
       token: token,
       orgMap: [],
       roleMap: [],
+      exportLoading: false, // 新增：导出loading状态
       rules: {
-        userName: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
+        cdMc: [{ required: true, message: "请输入场地名称", trigger: "blur" }],
+        cdGdRs: [
+          { required: true, message: "请输入场地规定人数", trigger: "blur" },
         ],
-        userPassword: [
-          { required: true, message: "请输入用户密码", trigger: "blur" },
-        ],
-        orgCode: [{ required: true, message: "请选择机构", trigger: "blur" }],
-        userAge: [{ validator: this.validateAge, trigger: "blur" }],
       },
     };
   },
@@ -330,8 +305,7 @@ export default {
 
     reset() {
       this.wxCdCdxx = {
-        userName: "",
-        userPhone: "",
+        cdMc: "",
         pageNum: 1,
         pageSize: 20,
       };
@@ -348,23 +322,6 @@ export default {
       this.queryPageList();
     },
 
-    validateAge(rule, value, callback) {
-      if (value !== null && value !== "") {
-        let num = Number(value);
-        if (!Number.isInteger(num)) {
-          callback(new Error("年龄必须为整数"));
-        } else if (value < 0) {
-          callback(new Error("年龄不能为负数"));
-        } else if (value > 150) {
-          callback(new Error("年龄不能超过150岁"));
-        } else {
-          callback();
-        }
-      } else {
-        callback();
-      }
-    },
-
     save() {
       this.saveOrUpdateTitle = "新增";
       this.from = {};
@@ -373,11 +330,11 @@ export default {
     },
 
     update() {
-      if (this.userUuidIn.length === 0) {
+      if (this.cdxxUuidIn.length === 0) {
         this.$message.warning("请勾选您要修改的项！");
         return;
       }
-      if (this.userUuidIn.length > 1) {
+      if (this.cdxxUuidIn.length > 1) {
         this.$message.warning("只能选择一条数据修改！");
         return;
       }
@@ -399,7 +356,7 @@ export default {
                 type: "success",
               });
               this.dialogFormVisible = false;
-              this.userUuidIn = [];
+              this.cdxxUuidIn = [];
               this.reset();
             } else {
               this.$message.error(res.message);
@@ -413,13 +370,13 @@ export default {
     },
 
     deleteData() {
-      if (this.userUuidIn.length === 0) {
+      if (this.cdxxUuidIn.length === 0) {
         this.$message.warning("请勾选您要删除的项！");
         return;
       }
 
       const data = {
-        userUuidIn: this.userUuidIn,
+        cdxxUuidIn: this.cdxxUuidIn,
       };
       request.post("wxCdCdxx/delete", data).then((res) => {
         if (res.code === 201) {
@@ -427,7 +384,7 @@ export default {
             message: res.message,
             type: "success",
           });
-          this.userUuidIn = [];
+          this.cdxxUuidIn = [];
           this.reset();
         } else {
           this.$message.error(res.message);
@@ -435,23 +392,76 @@ export default {
       });
     },
 
-    excelData() {
-      const excelData = {
-        userName: this.wxCdCdxx.userName,
-        userPhone: this.wxCdCdxx.userPhone,
-        userUuidIn: this.userUuidIn,
-      };
+    // 修复导出方法
+    async excelData() {
+      // 防止重复导出
+      if (this.exportLoading) {
+        return;
+      }
 
-      request.post("wxCdCdxx/exportExcel", excelData, {
-        responseType: "blob",
-      });
+      this.exportLoading = true;
+
+      try {
+        const excelData = {
+          cdMc: this.wxCdCdxx.cdMc,
+          cdxxUuidIn: this.cdxxUuidIn,
+          pageNum: this.wxCdCdxx.pageNum,
+          pageSize: this.wxCdCdxx.pageSize,
+        };
+
+        // request.ts 会自动处理 blob 并下载文件
+        await request.post("wxCdCdxx/exportExcel", excelData, {
+          responseType: "blob",
+          fileName: `场地信息_${new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace(/:/g, "-")}.xlsx`,
+        });
+
+        // 导出成功提示（注意：blob响应不会返回code，所以这里直接提示成功）
+        this.$message.success("导出成功");
+      } catch (error) {
+        console.error("导出失败:", error);
+        // 如果后端返回了错误信息（JSON格式），尝试解析
+        if (error.response?.data) {
+          try {
+            const text = await error.response.data.text();
+            const errorData = JSON.parse(text);
+            this.$message.error(errorData.message || "导出失败");
+          } catch (e) {
+            this.$message.error("导出失败，请稍后重试");
+          }
+        } else {
+          this.$message.error(error.message || "导出失败");
+        }
+      } finally {
+        this.exportLoading = false;
+      }
+    },
+
+    importData(res) {
+      if (res.code === 201) {
+        this.$message({
+          message: res.message,
+          type: "success",
+        });
+        this.reset();
+      } else {
+        this.$message.error(res.message);
+      }
+    },
+
+    // 新增：导入失败回调
+    importError(error) {
+      console.error("导入失败:", error);
+      this.$message.error("导入失败，请检查文件格式或网络连接");
     },
 
     handleSelectionChange(val) {
-      this.userUuidIn = [];
+      this.cdxxUuidIn = [];
       val.forEach((item) => {
-        if (item.userUuid) {
-          this.userUuidIn.push(item.userUuid);
+        if (item.cdxxUuid) {
+          this.cdxxUuidIn.push(item.cdxxUuid);
           this.dataBean = item;
         }
       });

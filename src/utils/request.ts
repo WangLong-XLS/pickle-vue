@@ -109,6 +109,23 @@ function handleFileResponse(response: AxiosResponse): Promise<any> {
   const contentType =
     (response.headers["content-type"] as string) || "application/octet-stream";
 
+  // 检查是否是错误响应（后端返回的 JSON 错误）
+  if (contentType.includes("application/json")) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const errorData = JSON.parse(reader.result as string);
+          reject(errorData);
+        } catch (e) {
+          reject(response.data);
+        }
+      };
+      reader.onerror = () => reject(response.data);
+      reader.readAsText(response.data);
+    });
+  }
+
   const blob = new Blob([response.data], {
     type: contentType,
   });
@@ -145,7 +162,7 @@ function handleFileResponse(response: AxiosResponse): Promise<any> {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 
-  return Promise.resolve(response.data);
+  return Promise.resolve({ success: true });
 }
 
 export default service;

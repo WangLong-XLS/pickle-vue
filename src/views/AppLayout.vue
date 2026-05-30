@@ -128,6 +128,32 @@
 }
 </style>
 
+<style>
+/* 全局样式 - 确保对话框圆角和居中生效 */
+.el-dialog {
+  border-radius: 15px !important;
+  overflow: hidden !important;
+}
+
+.el-dialog__header {
+  border-radius: 15px 15px 0 0 !important;
+}
+
+.el-dialog__footer {
+  border-radius: 0 0 15px 15px !important;
+}
+
+.el-overlay-dialog {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.el-dialog {
+  margin: 0 !important;
+}
+</style>
+
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
