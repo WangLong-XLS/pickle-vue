@@ -26,7 +26,7 @@
         <!-- 导入按钮 - 修复接口地址 -->
         <el-upload
           class="import-upload"
-          action="http://localhost:8888/pickle/wxCdCdxx/importExcel"
+          :action="uploadUrl"
           :headers="{ token: token }"
           accept=".xlsx, .xls"
           :on-success="importData"
@@ -225,6 +225,12 @@ import {
 } from "@element-plus/icons-vue";
 
 export default {
+  computed: {
+    uploadUrl() {
+      return `${process.env.VUE_APP_API_BASE_URL}/wxCdCdxx/importExcel`;
+    },
+  },
+
   name: "WxCdCdxxView", // 修正组件名称
   components: {
     UploadFilled,

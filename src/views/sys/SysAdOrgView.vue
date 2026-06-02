@@ -23,7 +23,7 @@
       </button>
       <button>
         <el-upload
-          action="http://localhost:8888/manage/xls/sysAdOrg/importExcel"
+          :action="uploadUrl"
           :headers="{ token: this.token }"
           accept=".xlsx, .xls"
           :on-success="importData"
@@ -480,6 +480,12 @@
 import request from "@/utils/request";
 
 export default {
+  computed: {
+    uploadUrl() {
+      return `${process.env.VUE_APP_API_BASE_URL}/sysAdOrg/importExcel`;
+    },
+  },
+
   data() {
     return {
       sysAdOrg: {

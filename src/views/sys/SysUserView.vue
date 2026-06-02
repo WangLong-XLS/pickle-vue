@@ -26,7 +26,7 @@
         <!-- 导入按钮 -->
         <el-upload
           class="import-upload"
-          action="http://localhost:8888/pickle/sysAdOrg/importExcel"
+          :action="uploadUrl"
           :headers="{ token: token }"
           accept=".xlsx, .xls"
           :on-success="importData"
@@ -301,6 +301,12 @@ import {
 } from "@element-plus/icons-vue";
 
 export default {
+  computed: {
+    uploadUrl() {
+      return `${process.env.VUE_APP_API_BASE_URL}/sysAdOrg/importExcel`;
+    },
+  },
+
   name: "SysUserView",
   components: {
     UploadFilled,
