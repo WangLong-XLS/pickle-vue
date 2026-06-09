@@ -53,6 +53,16 @@
             <el-sub-menu index="3">
               <template #title>
                 <el-icon><Location /></el-icon>
+                <span>会员管理</span>
+              </template>
+              <el-menu-item-group>
+                <el-menu-item index="/wxUser">会员信息</el-menu-item>
+              </el-menu-item-group>
+            </el-sub-menu>
+
+            <el-sub-menu index="4">
+              <template #title>
+                <el-icon><Location /></el-icon>
                 <span>场地管理</span>
               </template>
               <el-menu-item-group>
@@ -62,7 +72,7 @@
               </el-menu-item-group>
             </el-sub-menu>
 
-            <el-sub-menu index="4">
+            <el-sub-menu index="5">
               <template #title>
                 <el-icon><Location /></el-icon>
                 <span>家族管理</span>

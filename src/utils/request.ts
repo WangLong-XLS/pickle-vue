@@ -5,7 +5,6 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import router from "@/router";
-import { ElMessage } from "element-plus";
 
 // 定义响应数据的类型
 interface ResponseData<T = unknown> {

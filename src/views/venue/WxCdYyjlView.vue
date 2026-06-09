@@ -62,9 +62,10 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" />
-        <el-table-column prop="userUuid" label="微信用户id" />
-        <el-table-column prop="ccyyUuid" label="场次信息id" />
-        <el-table-column prop="yyRq" label="预约日期" />
+        <el-table-column prop="userName" label="预约人名称" />
+        <el-table-column prop="cdMc" label="预约场地" />
+        <el-table-column prop="ccSd" label="预约场次" />
+        <el-table-column prop="yyRq" :formatter="formatDate" label="预约日期" />
         <el-table-column prop="yyRs" label="预约人数" />
       </el-table>
     </div>
@@ -92,8 +93,49 @@
         <el-form :model="from" :rules="rules" ref="formRef">
           <div class="form-row">
             <div class="form-col">
+              <el-form-item label="预约日期：" label-width="40%" prop="yyRq">
+                <el-date-picker
+                  v-model="from.yyRq"
+                  type="date"
+                  placeholder="请选择预约日期"
+                  style="width: 70%"
+                  @change="handleDateChange"
+                />
+              </el-form-item>
               <el-form-item
-                label="场地名称："
+                label="场次时段："
+                label-width="40%"
+                prop="ccyyUuid"
+              >
+                <el-select
+                  v-model="from.ccyyUuid"
+                  placeholder="请先选择日期和场地"
+                  style="width: 70%"
+                  clearable
+                  :disabled="!from.yyRq || !from.cdxxUuid"
+                >
+                  <el-option
+                    v-for="item in ccSdMap"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="预约人数：" label-width="40%" prop="yyRs">
+                <el-input
+                  v-model="from.yyRs"
+                  autocomplete="off"
+                  type="number"
+                  style="width: 70%"
+                ></el-input>
+              </el-form-item>
+            </div>
+
+            <div class="form-col">
+              <el-form-item
+                label="预约场地："
                 label-width="40%"
                 prop="cdxxUuid"
               >
@@ -101,6 +143,7 @@
                   v-model="from.cdxxUuid"
                   placeholder=""
                   style="width: 70%"
+                  @change="handleVenueChange"
                   clearable
                 >
                   <el-option
@@ -111,40 +154,16 @@
                   />
                 </el-select>
               </el-form-item>
-              <el-form-item label="场地单价：" label-width="40%" prop="cdDj">
+              <el-form-item
+                label="预约人名称："
+                label-width="40%"
+                prop="userUuid"
+              >
                 <el-input
-                  v-model="from.cdDj"
-                  autocomplete="off"
-                  type="number"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="排序号：" label-width="40%" prop="pxh">
-                <el-input
-                  v-model="from.pxh"
+                  v-model="from.userUuid"
                   autocomplete="off"
                   style="width: 70%"
                 ></el-input>
-              </el-form-item>
-            </div>
-
-            <div class="form-col">
-              <el-form-item label="场次时段：" label-width="40%" prop="ccSd">
-                <el-input
-                  v-model="from.ccSd"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="是否黄金天：" label-width="40%" prop="hjtBz">
-                <el-select
-                  v-model="from.hjtBz"
-                  placeholder=""
-                  style="width: 70%"
-                >
-                  <el-option label="是" value="Y" />
-                  <el-option label="否" value="N" />
-                </el-select>
               </el-form-item>
             </div>
           </div>
@@ -166,6 +185,13 @@
         :close-on-click-modal="false"
       >
         <el-form :model="wxCdYyjl">
+          <el-form-item label="预约人名称：" label-width="25%">
+            <el-input
+              v-model="wxCdYyjl.userName"
+              autocomplete="off"
+              style="width: 70%"
+            ></el-input>
+          </el-form-item>
           <el-form-item label="场地名称：" label-width="25%">
             <el-select
               v-model="wxCdYyjl.cdxxUuid"
@@ -181,15 +207,13 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="是否黄金天：" label-width="25%">
-            <el-select
-              v-model="wxCdYyjl.hjtBz"
-              placeholder=""
+          <el-form-item label="预约日期：" label-width="25%">
+            <el-date-picker
+              v-model="wxCdYyjl.yyRq"
+              type="date"
+              placeholder="请选择预约日期"
               style="width: 70%"
-            >
-              <el-option label="是" value="Y" />
-              <el-option label="否" value="N" />
-            </el-select>
+            />
           </el-form-item>
         </el-form>
         <template #footer>
@@ -275,7 +299,7 @@ export default {
     },
   },
 
-  name: "WxCdCdxxView", // 修正组件名称
+  name: "WxCdYyjlView", // 修正组件名称
   components: {
     UploadFilled,
     Search,
@@ -298,8 +322,9 @@ export default {
 
     return {
       wxCdYyjl: {
+        userName: "",
         cdxxUuid: "",
-        hjtBz: "",
+        yyRq: null,
         pageNum: 1,
         pageSize: 20,
       },
@@ -318,23 +343,35 @@ export default {
       orgMap: [],
       roleMap: [],
       cdxxMap: [],
+      availabilityLoading: false, // 新增：加载状态
+      ccSdMap: [], // 新增：可预约场次数据（如果需要）
+      fetchTimer: null, // 新增：防抖定时器
       exportLoading: false, // 新增：导出loading状态
       rules: {
         cdxxUuid: [
-          { required: true, message: "请选择场地名称", trigger: "blur" },
+          { required: true, message: "请选择预约场地", trigger: "blur" },
         ],
-        ccSd: [{ required: true, message: "请输入场次时段", trigger: "blur" }],
-        cdDj: [{ required: true, message: "请输入场地单价", trigger: "blur" }],
-        hjtBz: [
-          { required: true, message: "请选择是否黄金天", trigger: "blur" },
+        userUuid: [
+          { required: true, message: "请输入预约人名称", trigger: "blur" },
         ],
-        pxh: [{ required: true, message: "请输入排序号", trigger: "blur" }],
+        ccyyUuid: [
+          { required: true, message: "请输入场次时段", trigger: "blur" },
+        ],
+        yyRs: [{ required: true, message: "请输入预约人数", trigger: "blur" }],
+        yyRq: [{ required: true, message: "预约日期", trigger: "blur" }],
       },
     };
   },
 
   created() {
     this.load();
+  },
+
+  // 组件销毁前清除定时器
+  beforeUnmount() {
+    if (this.fetchTimer) {
+      clearTimeout(this.fetchTimer);
+    }
   },
 
   methods: {
@@ -346,8 +383,9 @@ export default {
     queryData() {
       this.queryDialogFromFlag = true;
       this.wxCdYyjl = {
+        userName: "",
         cdxxUuid: "",
-        hjtBz: "",
+        yyRq: null,
         pageNum: 1,
         pageSize: 20,
       };
@@ -367,8 +405,9 @@ export default {
 
     reset() {
       this.wxCdYyjl = {
+        userName: "",
         cdxxUuid: "",
-        hjtBz: "",
+        yyRq: null,
         pageNum: 1,
         pageSize: 20,
       };
@@ -407,6 +446,102 @@ export default {
       this.originalData = JSON.parse(JSON.stringify(this.dataBean));
       this.dialogFormVisible = true;
       this.saveOrUpdateFlag = "wxCdYyjl/update";
+    },
+
+    // 日期变化
+    handleDateChange(val) {
+      console.log("日期变化:", val);
+      // 清除之前的定时器
+      if (this.fetchTimer) {
+        clearTimeout(this.fetchTimer);
+      }
+      // 延迟执行，避免频繁请求
+      this.fetchTimer = setTimeout(() => {
+        this.checkAndFetch();
+      }, 300);
+    },
+
+    // 场地变化
+    handleVenueChange(val) {
+      console.log("场地变化:", val);
+      // 清除之前的定时器
+      if (this.fetchTimer) {
+        clearTimeout(this.fetchTimer);
+      }
+      // 延迟执行，避免频繁请求
+      this.fetchTimer = setTimeout(() => {
+        this.checkAndFetch();
+      }, 300);
+    },
+
+    // 失焦处理
+    handleFieldBlur() {
+      // 清除之前的定时器
+      if (this.fetchTimer) {
+        clearTimeout(this.fetchTimer);
+      }
+      // 检查两个字段是否都有值
+      if (this.from.yyRq && this.from.cdxxUuid) {
+        this.fetchAvailability();
+      }
+    },
+
+    // 检查并请求（防抖版本）
+    checkAndFetch() {
+      if (this.from.yyRq && this.from.cdxxUuid) {
+        console.log("两个字段都有值，准备请求接口");
+        console.log("预约日期:", this.from.yyRq);
+        console.log("预约场地:", this.from.cdxxUuid);
+        this.fetchAvailability();
+      } else {
+        console.log("字段不完整，等待用户填写");
+        // 如果字段不完整，可以清空场次选项
+        if (!this.from.yyRq || !this.from.cdxxUuid) {
+          this.ccSdMap = [];
+        }
+      }
+    },
+
+    // 请求后端接口获取可用信息
+    async fetchAvailability() {
+      // 防止重复请求
+      if (this.availabilityLoading) {
+        console.log("正在请求中，请勿重复操作");
+        return;
+      }
+
+      try {
+        this.availabilityLoading = true;
+
+        const params = {
+          dqRq: this.from.yyRq,
+          cdxxUuid: this.from.cdxxUuid,
+        };
+
+        console.log("请求参数:", params);
+
+        // 根据您的实际接口地址修改
+        // 例如：获取可预约的场次时段、最大预约人数等信息
+        const res = await request.post("wxCdCcxx/selectCcList", params);
+
+        if (res.code === 201) {
+          console.log("获取成功:", res.data);
+          this.ccSdMap = res.data.map((item) => ({
+            label: item.ccSd,
+            value: item.ccyyUuid,
+          }));
+        } else {
+          this.$message.error(res.message || "获取可用信息失败");
+          // 清空相关选项
+          this.ccSdMap = [];
+        }
+      } catch (error) {
+        console.error("请求失败:", error);
+        this.$message.error("网络错误，请稍后重试");
+        this.ccSdMap = [];
+      } finally {
+        this.availabilityLoading = false;
+      }
     },
 
     submit() {
@@ -466,7 +601,9 @@ export default {
 
       try {
         const excelData = {
-          cdMc: this.wxCdYyjl.cdMc,
+          userName: this.wxCdYyjl.userName,
+          cdxxUuid: this.wxCdYyjl.cdxxUuid,
+          yyRq: this.wxCdYyjl.yyRq,
           yyjlUuidIn: this.yyjlUuidIn,
           pageNum: this.wxCdYyjl.pageNum,
           pageSize: this.wxCdYyjl.pageSize,
@@ -530,10 +667,19 @@ export default {
       });
     },
 
+    formatDate(row, column, cellValue) {
+      if (!cellValue) return "";
+      const date = new Date(cellValue);
+      return `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    },
+
     async loadMultipleData() {
       const [sysAdOrg, sysRole, wxCdCdxx] = await Promise.all([
         request.post("sysAdOrg/selectOrgCode2OrgNameMap", this.from),
         request.post("sysRole/selectListByBean", this.from),
+        request.post("wxCdCdxx/selectListByBean", this.from),
         request.post("wxCdCdxx/selectListByBean", this.from),
       ]);
       if (sysAdOrg.code === 201) {
