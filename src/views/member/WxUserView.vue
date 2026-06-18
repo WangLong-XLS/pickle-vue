@@ -36,7 +36,22 @@
         <el-table-column type="selection" />
         <el-table-column prop="userName" label="用户名" />
         <el-table-column prop="userCode" label="用户账号" />
-        <el-table-column prop="userImage" label="用户头像" />
+        <!-- 用户头像列 - 使用模板显示图片 -->
+        <el-table-column label="用户头像">
+          <template #default="scope">
+            <el-image
+              :src="scope.row.userImage"
+              :preview-src-list="[scope.row.userImage]"
+              fit="cover"
+              style="
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                cursor: pointer;
+              "
+            />
+          </template>
+        </el-table-column>
         <el-table-column prop="userSexMc" label="用户性别" />
         <el-table-column prop="userPhone" label="用户手机号" />
       </el-table>

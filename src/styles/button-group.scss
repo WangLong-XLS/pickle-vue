@@ -1,0 +1,49 @@
+.lb-div {
+  margin-top: 10px;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+
+  button,
+  .import-upload button {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    color: #2962ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .el-icon,
+  .import-upload .el-icon {
+    font-size: 18px;
+  }
+
+  p,
+  .import-upload p {
+    font-size: 12px;
+    margin-top: 8px;
+    margin-bottom: 0;
+  }
+
+  .import-upload {
+    display: inline-flex;
+  }
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+.form-col {
+  flex: 0 0 50%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}

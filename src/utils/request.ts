@@ -19,8 +19,7 @@ interface CustomRequestConfig extends AxiosRequestConfig {
 }
 
 const service: AxiosInstance = axios.create({
-  baseURL: "http://localhost:8888/pickle",
-  // baseURL: "http://localhost:8881/pickle",
+  baseURL: process.env.VUE_APP_API_BASE_URL || "http://localhost:8888/pickle",
   timeout: 50000,
 });
 
@@ -71,38 +70,41 @@ service.interceptors.response.use(
       }
     }
 
-    // 处理 401 未授权
+    // 处理业务层 401（响应体 code === 401）
     if (res.code === 401) {
-      // 1. 清除本地存储
-      localStorage.removeItem("user");
-
-      // 3. 防止重复跳转
-      if (!isRedirecting) {
-        isRedirecting = true;
-        router.push("/login").finally(() => {
-          setTimeout(() => {
-            isRedirecting = false;
-          }, 2000);
-        });
-      }
-
-      // 4. 关键修改：返回普通对象而不是 reject
-      //    这样既能在控制台看到错误（因为后端返回了），又不会出现 Promise 未捕获的报错
-      return {
-        code: 401,
-        message: res.message,
-        data: null,
-      };
+      handle401(res.message);
+      return { code: 401, message: res.message, data: null };
     }
 
     return res;
   },
-  (error: unknown) => {
-    // 其他错误继续抛出
+  (error: any) => {
+    // HTTP 状态码 401（未登录或 token 过期）
+    if (error.response && error.response.status === 401) {
+      const data = error.response.data;
+      const message = data?.message || "登录已过期，请重新登录";
+      handle401(message);
+      return Promise.resolve({ code: 401, message, data: null });
+    }
+
     console.log("响应拦截器错误: " + error);
     return Promise.reject(error);
   }
 );
+
+/** 统一处理 401：清除登录态并跳转登录页 */
+function handle401(message?: string) {
+  localStorage.removeItem("user");
+
+  if (!isRedirecting) {
+    isRedirecting = true;
+    router.push("/login").finally(() => {
+      setTimeout(() => {
+        isRedirecting = false;
+      }, 2000);
+    });
+  }
+}
 
 // 处理文件响应
 function handleFileResponse(response: AxiosResponse): Promise<any> {

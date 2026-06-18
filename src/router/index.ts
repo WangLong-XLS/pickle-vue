@@ -9,6 +9,7 @@ import WxCdCdxxView from "@/views/venue/WxCdCdxxView.vue";
 import WxCdCcxxView from "@/views/venue/WxCdCcxxView.vue";
 import WxCdYyjlView from "@/views/venue/WxCdYyjlView.vue";
 import WxUserView from "@/views/member/WxUserView.vue";
+import SysMenuView from "@/views/sys/SysMenuView.vue";
 
 // 确保所有组件都存在
 const routes = [
@@ -61,6 +62,11 @@ const routes = [
         path: "wxUser",
         name: "wxUser",
         component: WxUserView,
+      },
+      {
+        path: "sysMenu",
+        name: "sysMenu",
+        component: SysMenuView,
       },
     ],
   },
