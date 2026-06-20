@@ -78,30 +78,31 @@
     <el-dialog
       :title="dialogTitle"
       v-model="dialogVisible"
-      width="50%"
+      width="55%"
+      class="user-dialog"
       :close-on-click-modal="false"
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <div class="form-row">
           <div class="form-col">
-            <el-form-item label="菜单名称" label-width="25%" prop="menuName">
+            <el-form-item label="菜单名称" label-width="30%" prop="menuName">
               <el-input v-model="form.menuName" style="width: 70%" />
             </el-form-item>
             <el-form-item
               label="后端路由路径"
-              label-width="25%"
+              label-width="30%"
               prop="menuPath"
             >
               <el-input v-model="form.menuPath" style="width: 70%" />
             </el-form-item>
-            <el-form-item label="图标" label-width="25%" prop="menuIcon">
+            <el-form-item label="图标" label-width="30%" prop="menuIcon">
               <el-input
                 v-model="form.menuIcon"
                 style="width: 70%"
                 placeholder="请输入图标名称"
               />
             </el-form-item>
-            <el-form-item label="父级菜单" label-width="25%" prop="parentUuid">
+            <el-form-item label="父级菜单" label-width="30%" prop="parentUuid">
               <el-select
                 v-model="form.parentUuid"
                 clearable
@@ -120,7 +121,7 @@
           </div>
 
           <div class="form-col">
-            <el-form-item label="菜单类型" label-width="25%" prop="menuType">
+            <el-form-item label="菜单类型" label-width="30%" prop="menuType">
               <el-select v-model="form.menuType" style="width: 70%">
                 <el-option label="菜单项" value="0" />
                 <el-option label="子菜单分组" value="1" />
@@ -128,19 +129,37 @@
             </el-form-item>
             <el-form-item
               label="前端路由路径"
-              label-width="25%"
+              label-width="30%"
               prop="component"
             >
               <el-input v-model="form.component" style="width: 70%" />
             </el-form-item>
-            <el-form-item label="排序" label-width="25%" prop="menuOrder">
+            <el-form-item label="排序" label-width="30%" prop="menuOrder">
               <el-input
                 v-model="form.menuOrder"
                 type="number"
                 style="width: 70%"
               ></el-input>
             </el-form-item>
-            <el-form-item label="是否显示" label-width="25%" prop="visible">
+            <el-form-item label="角色权限" label-width="30%" prop="roleUuidIn">
+              <el-select
+                v-model="form.roleUuidIn"
+                clearable
+                multiple
+                filterable
+                collapse-tags
+                placeholder="请选择角色权限"
+                style="width: 70%"
+              >
+                <el-option
+                  v-for="item in roleMap"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="是否显示" label-width="30%" prop="visible">
               <el-switch
                 v-model="form.visible"
                 active-value="Y"
@@ -178,7 +197,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, FormInstance } from "element-plus";
 import {
   Search,
   CirclePlus,
@@ -188,7 +207,7 @@ import {
   UploadFilled,
 } from "@element-plus/icons-vue";
 import request from "@/utils/request";
-import type { SysMenu } from "@/types/menu";
+import type { SysMenu } from "@/types/sys/menu";
 
 // ---------- 常量 ----------
 const uploadUrl = `${process.env.VUE_APP_API_BASE_URL}/sysMenu/importExcel`;
@@ -217,6 +236,7 @@ const dialogVisible = ref(false);
 const dialogTitle = ref("新增菜单");
 const isEdit = ref(false);
 const queryDialogVisible = ref(false);
+const formRef = ref<FormInstance | null>(null);
 
 // 从 localStorage 获取 token
 const token = ref("");
@@ -254,22 +274,36 @@ const form = ref<SysMenu>({
   menuOrder: "",
   menuType: "0",
   visible: "Y",
+  roleUuidIn: [],
 });
 
 // 父级菜单选项（用于下拉选择）
 const parentOptions = ref<SysMenu[]>([]);
+const roleMap = ref<{ label: string; value: string }[]>([]);
+
+// 通用数组非空校验
+const arrayRequired = (message: string) => {
+  return (_rule: any, value: any, callback: any) => {
+    if (!value || !Array.isArray(value) || value.length === 0) {
+      callback(new Error(message));
+    } else {
+      callback();
+    }
+  };
+};
 
 // 表单校验规则
 const rules = {
   menuName: [{ required: true, message: "请输入菜单名称", trigger: "blur" }],
-  menuPath: [
-    { required: true, message: "请输入后端路由路径", trigger: "blur" },
-  ],
-  component: [
-    { required: true, message: "请输入前端路由路径", trigger: "blur" },
-  ],
   menuType: [{ required: true, message: "请选择菜单类型", trigger: "change" }],
   visible: [{ required: true, message: "请选择菜单是否显示", trigger: "blur" }],
+  roleUuidIn: [
+    {
+      required: true,
+      validator: arrayRequired("请选择权限角色"),
+      trigger: "change",
+    },
+  ],
 };
 
 // ---------- 方法 ----------
@@ -298,6 +332,20 @@ const loadParentOptions = async () => {
     }
   } catch {
     console.error("加载父级菜单失败");
+  }
+};
+
+const loadRoleList = async () => {
+  try {
+    const res = await request.post("sysRole/selectListByBean", {});
+    if (res.code === 201) {
+      roleMap.value = (res.data || []).map((item: any) => ({
+        label: item.roleName,
+        value: item.roleUuid,
+      }));
+    }
+  } catch {
+    console.error("加载角色列表失败");
   }
 };
 
@@ -376,7 +424,10 @@ const deleteData = async () => {
 
 // 提交表单
 const submit = async () => {
+  if (!formRef.value) return;
+
   try {
+    await formRef.value.validate();
     const api = isEdit.value ? "sysMenu/update" : "sysMenu/save";
     const res = await request.post(api, form.value);
     if (res.code === 201) {
@@ -387,7 +438,7 @@ const submit = async () => {
       ElMessage.error(res.message);
     }
   } catch {
-    ElMessage.error("保存失败");
+    ElMessage.error("请补充表单信息");
   }
 };
 
@@ -456,9 +507,27 @@ const handleCurrentChange = (page: number) => {
 onMounted(() => {
   loadData();
   loadParentOptions();
+  loadRoleList();
 });
 </script>
 
 <style scoped>
 @import "@/styles/button-group.scss";
+</style>
+
+<style>
+.user-dialog .dialog-form-wrapper {
+  padding: 10px 0 0 0;
+  width: 100%;
+}
+.user-dialog .form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.user-dialog .form-col {
+  flex: 1;
+  min-width: 280px;
+  box-sizing: border-box;
+}
 </style>

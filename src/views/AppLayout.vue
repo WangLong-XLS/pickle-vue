@@ -32,7 +32,13 @@
 
       <el-container>
         <el-aside width="250px">
-          <el-menu :default-active="$route.path" router class="el-menu-aside">
+          <!-- ✅ 加 v-if，防止空数据报错 -->
+          <el-menu
+            v-if="menuList.length > 0"
+            :default-active="$route.path"
+            router
+            class="el-menu-aside"
+          >
             <template v-for="item in menuList" :key="item.menuUuid">
               <!-- menuType=0：直接菜单项 -->
               <el-menu-item v-if="item.menuType === '0'" :index="item.menuPath">
@@ -47,7 +53,7 @@
                   <span>{{ item.menuName }}</span>
                 </template>
                 <el-menu-item
-                  v-for="child in item.sysMenuIn"
+                  v-for="child in item.sysMenuIn || []"
                   :key="child.menuUuid"
                   :index="child.menuPath"
                 >
@@ -56,6 +62,10 @@
               </el-sub-menu>
             </template>
           </el-menu>
+          <!-- ✅ 菜单为空时显示加载中 -->
+          <div v-else class="menu-loading">
+            <el-skeleton :rows="5" animated />
+          </div>
         </el-aside>
 
         <el-main>
@@ -67,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
   HomeFilled,
@@ -78,7 +88,9 @@ import {
   ArrowDown,
 } from "@element-plus/icons-vue";
 import request from "@/utils/request";
-import { MenuItem, SysMenu } from "@/types/menu";
+import type { MenuItem } from "@/types/sys/menu";
+
+const router = useRouter();
 
 const user = ref({
   userName: "",
@@ -86,43 +98,58 @@ const user = ref({
   roleUuidIn: [],
 });
 
+/** 菜单列表 */
+const menuList = ref<MenuItem[]>([]);
+
+/** 根据角色加载菜单 */
+async function loadMenus() {
+  // ✅ 没有角色直接返回，不请求
+  if (!user.value.roleUuidIn || user.value.roleUuidIn.length === 0) {
+    menuList.value = [];
+    return;
+  }
+  try {
+    const data = {
+      roleUuidIn: user.value.roleUuidIn,
+    };
+    const res = await request.post("/sysMenu/getMenusByRole", data);
+    // ✅ 确保返回的是数组
+    const result = res.data || res || [];
+    menuList.value = Array.isArray(result) ? result : [];
+  } catch (e) {
+    console.error("加载菜单失败", e);
+    menuList.value = []; // ✅ 失败时清空菜单
+  }
+}
+
+/** 退出登录 */
+const loginOut = () => {
+  localStorage.removeItem("user");
+  menuList.value = []; // ✅ 清空菜单
+  router.push("/login");
+};
+
+/** 下拉菜单命令 */
+const handleCommand = (command: string) => {
+  if (command === "loginOut") loginOut();
+  // 其他命令可继续扩展
+};
+
+/** 生命周期 */
 onMounted(() => {
   const userStr = localStorage.getItem("user");
   if (userStr) {
     try {
       const parsed = JSON.parse(userStr);
       user.value = parsed;
-      if (parsed.roleUuidIn) loadMenus();
+      if (parsed.roleUuidIn && parsed.roleUuidIn.length > 0) {
+        loadMenus();
+      }
     } catch (e) {
       console.error("解析用户信息失败", e);
     }
   }
 });
-
-/** 根据角色加载菜单 */
-const menuList = ref<MenuItem[]>([]);
-async function loadMenus() {
-  if (!user.value.roleUuidIn) return;
-  try {
-    const data = {
-      roleUuidIn: user.value.roleUuidIn,
-    };
-    const res = await request.post("/sysMenu/getMenusByRole", data);
-    menuList.value = res.data || res || [];
-  } catch (e) {
-    console.error("加载菜单失败", e);
-  }
-}
-
-const handleCommand = (command: string) => {
-  if (command === "loginOut") loginOut();
-};
-
-const router = useRouter();
-const loginOut = () => {
-  localStorage.removeItem("user");
-  router.push("/login");
-};
 </script>
 
 <style scoped>
@@ -160,6 +187,11 @@ const loginOut = () => {
 
 .el-menu-aside {
   width: 250px;
+}
+
+/* ✅ 新增：菜单加载占位样式 */
+.menu-loading {
+  padding: 20px;
 }
 </style>
 
