@@ -10,6 +10,7 @@ import WxCdCcxxView from "@/views/venue/WxCdCcxxView.vue";
 import WxCdYyjlView from "@/views/venue/WxCdYyjlView.vue";
 import WxUserView from "@/views/member/WxUserView.vue";
 import SysMenuView from "@/views/sys/SysMenuView.vue";
+import GgCodeTypeTabView from "../views/sys/GgCodeTypeTabView.vue";
 
 // 确保所有组件都存在
 const routes = [
@@ -67,6 +68,11 @@ const routes = [
         path: "sysMenu",
         name: "sysMenu",
         component: SysMenuView,
+      },
+      {
+        path: "ggCodeTypeTab",
+        name: "ggCodeTypeTab",
+        component: GgCodeTypeTabView,
       },
     ],
   },

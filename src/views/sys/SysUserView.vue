@@ -375,12 +375,20 @@ const rules = {
     { required: true, message: "请输入用户密码", trigger: "blur" },
   ],
   orgCode: [{ required: true, message: "请选择机构", trigger: "blur" }],
-  userAge: [{ validator: validateAge, trigger: "blur" }],
+  userAge: [{ required: true, validator: validateAge, trigger: "blur" }],
   roleUuidIn: [
-    { validator: arrayRequired("请选择权限角色"), trigger: "change" },
+    {
+      required: true,
+      validator: arrayRequired("请选择权限角色"),
+      trigger: "change",
+    },
   ],
   orgUuidIn: [
-    { validator: arrayRequired("请选择权限机构"), trigger: "change" },
+    {
+      required: true,
+      validator: arrayRequired("请选择权限机构"),
+      trigger: "change",
+    },
   ],
 };
 
@@ -392,7 +400,6 @@ const loadData = async () => {
     if (res.code === 201) {
       tableData.value = res.data.list || [];
       total.value = res.data.total || 0;
-      resetQueryParams();
     } else {
       ElMessage.error(res.message);
     }
@@ -433,6 +440,8 @@ const loadRoleList = async () => {
 
 // 查询
 const queryData = () => {
+  queryParams.userName = "";
+  queryParams.userPhone = "";
   queryDialogVisible.value = true;
 };
 
