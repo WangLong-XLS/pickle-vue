@@ -1,810 +1,819 @@
 <template>
   <div>
     <div class="tb-div">
-      <button>
-        <i class="el-icon-search" @click="queryData()"></i>
-        <p>查询</p>
-      </button>
-      <button>
-        <i class="el-icon-circle-plus-outline" @click="save()"></i>
-        <p>新增</p>
-      </button>
-      <button>
-        <i class="el-icon-edit" @click="update()"></i>
-        <p>修改</p>
-      </button>
-      <button>
-        <i class="el-icon-delete" @click="deleteData()"></i>
-        <p>删除</p>
-      </button>
-      <button>
-        <i class="el-icon-download" @click="excelData()"></i>
-        <p>导出</p>
-      </button>
-      <button>
+      <div class="button-group">
+        <button @click="queryData">
+          <el-icon><Search /></el-icon>
+          <p>查询</p>
+        </button>
+        <button @click="save">
+          <el-icon><CirclePlus /></el-icon>
+          <p>新增</p>
+        </button>
+        <button @click="update">
+          <el-icon><Edit /></el-icon>
+          <p>修改</p>
+        </button>
+        <button @click="deleteData">
+          <el-icon><Delete /></el-icon>
+          <p>删除</p>
+        </button>
+        <button @click="excelData" :disabled="exportLoading">
+          <el-icon><Download /></el-icon>
+          <p>{{ exportLoading ? "导出中..." : "导出" }}</p>
+        </button>
+
+        <!-- 导入按钮 -->
         <el-upload
+          class="import-upload"
           :action="uploadUrl"
-          :headers="{ token: this.token }"
+          :headers="{ token }"
           accept=".xlsx, .xls"
           :on-success="importData"
+          :on-error="handleImportError"
           :show-file-list="false"
         >
-          <i class="el-icon-upload2"></i>
-          <p>导入</p>
+          <button>
+            <el-icon><UploadFilled /></el-icon>
+            <p>导入</p>
+          </button>
         </el-upload>
-      </button>
+      </div>
     </div>
 
-    <div class="lb-div">
+    <div class="lb-div table-wrapper">
       <el-table
         :data="tableData"
-        :header-cell-style="{
-          'text-align': 'center',
-          'background-color': '#E3ECFF',
-          color: '#333333',
-          height: '35px', // 表头行高
-          padding: '0px', // 去掉内边距
-        }"
-        :cell-style="{
-          'text-align': 'center',
-          color: '#333333',
-          height: '35px', // 表头行高
-          padding: '0px', // 去掉内边距
-        }"
-        style="width: 100%"
+        :header-cell-style="headerCellStyle"
+        :cell-style="cellStyle"
         border
+        style="width: 100%"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" />
+        <el-table-column type="selection" width="46" fixed="left" />
         <el-table-column
           prop="orgCode"
           label="机构代码"
-          width="150"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="orgName"
           label="机构名称"
-          width="200"
+          min-width="180"
           show-overflow-tooltip
         />
         <el-table-column
           prop="parentOrgUuid"
           label="上级机构"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="orgNameShort"
           label="机构简称"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="orgEngName"
           label="机构英文名称"
-          width="150"
+          min-width="160"
           show-overflow-tooltip
         />
         <el-table-column
           prop="areaCd"
           label="国家地区代码"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="sjMc"
           label="省级代码"
-          width="120"
+          min-width="100"
           show-overflow-tooltip
         />
         <el-table-column
           prop="shijMc"
           label="市级代码"
-          width="120"
+          min-width="100"
           show-overflow-tooltip
         />
         <el-table-column
           prop="xjMc"
           label="县级代码"
-          width="120"
+          min-width="100"
           show-overflow-tooltip
         />
         <el-table-column
           prop="orgAdress"
           label="详细地址"
-          width="200"
+          min-width="250"
           show-overflow-tooltip
         />
         <el-table-column
           prop="postCode"
           label="邮编"
-          width="120"
+          min-width="90"
           show-overflow-tooltip
         />
         <el-table-column
           prop="email"
           label="电子邮箱"
-          width="120"
+          min-width="160"
           show-overflow-tooltip
         />
         <el-table-column
           prop="contactTel"
           label="联系电话"
-          width="120"
+          min-width="130"
           show-overflow-tooltip
         />
         <el-table-column
           prop="foundTime"
           label="成立日期"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="legalPerson"
           label="法定代表人"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="isCorporateName"
           label="是否法人机构"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="isGroupName"
           label="是否集团"
-          width="120"
+          min-width="100"
           show-overflow-tooltip
         />
         <el-table-column
           prop="corpOrg"
           label="所属法人机构"
-          width="120"
+          min-width="140"
           show-overflow-tooltip
         />
         <el-table-column
           prop="orgStatus"
           label="所属集团"
-          width="120"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
           prop="sortNo"
           label="机构排序号"
-          width="120"
+          min-width="110"
           show-overflow-tooltip
         />
       </el-table>
     </div>
 
+    <!-- 分页 -->
     <div style="margin-top: 10px">
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="sysAdOrg.pageNum"
+        :current-page="queryParams.pageNum"
         :page-sizes="[20, 50, 100, 200]"
-        :page-size="sysAdOrg.pageSize"
+        :page-size="queryParams.pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
-      >
-      </el-pagination>
+      />
     </div>
 
-    <div>
-      <el-dialog
-        :title="saveOrUpdateTitle"
-        v-model="queryDialogFromFlag"
-        width="80%"
-        :close-on-click-modal="false"
-      >
-        <el-form :model="from" :rules="rules" ref="formRef">
-          <div class="form-row">
-            <div class="form-col">
-              <el-form-item label="机构代码：" label-width="40%" prop="orgCode">
-                <el-input
-                  v-model="from.orgCode"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="机构名称：" label-width="40%" prop="orgName">
-                <el-input
-                  v-model="from.orgName"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item
-                label="上级机构："
-                label-width="40%"
-                prop="parentOrgUuid"
-              >
-                <el-input
-                  v-model="from.parentOrgUuid"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="机构简称：" label-width="40%">
-                <el-input
-                  v-model="from.orgNameShort"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="机构英文名称：" label-width="40%">
-                <el-input
-                  v-model="from.orgEngName"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-            </div>
-            <div class="form-col">
-              <el-form-item label="国家地区代码：" label-width="40%">
-                <el-input
-                  v-model="from.areaCd"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="邮编：" label-width="40%">
-                <el-input
-                  v-model="from.postCode"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="电子邮箱：" label-width="40%">
-                <el-input
-                  v-model="from.email"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="联系电话：" label-width="40%">
-                <el-input
-                  v-model="from.contactTel"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="成立日期：" label-width="40%">
-                <el-input
-                  v-model="from.foundTime"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-            </div>
+    <!-- 新增/修改对话框 -->
+    <el-dialog
+      :title="dialogTitle"
+      v-model="dialogVisible"
+      width="80%"
+      class="user-dialog"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
+        <div class="form-row">
+          <!-- 左列 -->
+          <div class="form-col">
+            <el-form-item label="机构代码" prop="orgCode">
+              <el-input v-model="form.orgCode" placeholder="请输入机构代码" />
+            </el-form-item>
+            <el-form-item label="机构名称" prop="orgName">
+              <el-input v-model="form.orgName" placeholder="请输入机构名称" />
+            </el-form-item>
+            <el-form-item label="上级机构" prop="parentOrgUuid">
+              <el-input
+                v-model="form.parentOrgUuid"
+                placeholder="请输入上级机构"
+              />
+            </el-form-item>
+            <el-form-item label="机构简称">
+              <el-input
+                v-model="form.orgNameShort"
+                placeholder="请输入机构简称"
+              />
+            </el-form-item>
+            <el-form-item label="机构英文名称">
+              <el-input
+                v-model="form.orgEngName"
+                placeholder="请输入机构英文名称"
+              />
+            </el-form-item>
+          </div>
 
-            <div class="form-col">
-              <el-form-item label="法定代表人：" label-width="40%">
-                <el-input
-                  v-model="from.legalPerson"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="是否法人机构：" label-width="40%">
-                <el-select
-                  v-model="from.isCorporate"
-                  placeholder=""
-                  style="width: 70%"
-                >
-                  <el-option label="是" value="Y" />
-                  <el-option label="否" value="N" />
-                </el-select>
-              </el-form-item>
-              <el-form-item
-                label="所在地："
-                label-width="40%"
-                prop="location"
-                class="location-form-item"
+          <!-- 中列 -->
+          <div class="form-col">
+            <el-form-item label="国家地区代码">
+              <el-input
+                v-model="form.areaCd"
+                placeholder="请输入国家地区代码"
+              />
+            </el-form-item>
+            <el-form-item label="邮编">
+              <el-input v-model="form.postCode" placeholder="请输入邮编" />
+            </el-form-item>
+            <el-form-item label="电子邮箱">
+              <el-input v-model="form.email" placeholder="请输入电子邮箱" />
+            </el-form-item>
+            <el-form-item label="联系电话">
+              <el-input
+                v-model="form.contactTel"
+                placeholder="请输入联系电话"
+              />
+            </el-form-item>
+            <el-form-item label="成立日期">
+              <el-input v-model="form.foundTime" placeholder="请输入成立日期" />
+            </el-form-item>
+          </div>
+
+          <!-- 中右列 -->
+          <div class="form-col">
+            <el-form-item label="法定代表人">
+              <el-input
+                v-model="form.legalPerson"
+                placeholder="请输入法定代表人"
+              />
+            </el-form-item>
+            <el-form-item label="是否法人机构">
+              <el-select
+                v-model="form.isCorporate"
+                placeholder="请选择"
+                style="width: 100%"
               >
+                <el-option label="是" value="Y" />
+                <el-option label="否" value="N" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="所在地">
+              <div class="location-wrapper">
                 <el-select
-                  v-model="from.sjDm"
+                  v-model="form.sjDm"
                   @change="handleProvinceChange"
-                  class="location-select"
+                  placeholder="请选择省"
                   clearable
                 >
                   <el-option
-                    v-for="province in provinceList"
-                    :key="province.sjXzqhDm"
-                    :label="province.sjXzqhMc"
-                    :value="province.sjXzqhDm"
+                    v-for="item in provinceList"
+                    :key="item.sjXzqhDm"
+                    :label="item.sjXzqhMc"
+                    :value="item.sjXzqhDm"
                   />
                 </el-select>
                 <el-select
-                  v-model="from.shijDm"
+                  v-model="form.shijDm"
                   @change="handleCityChange"
-                  class="location-select"
+                  placeholder="请选择市"
                   clearable
                 >
                   <el-option
-                    v-for="city in cityList"
-                    :key="city.shijXzqhDm"
-                    :label="city.shijXzqhMc"
-                    :value="city.shijXzqhDm"
+                    v-for="item in cityList"
+                    :key="item.shijXzqhDm"
+                    :label="item.shijXzqhMc"
+                    :value="item.shijXzqhDm"
                   />
                 </el-select>
                 <el-select
-                  v-model="from.xjDm"
-                  @change="handleCountyChange"
-                  class="location-select"
+                  v-model="form.xjDm"
+                  placeholder="请选择区/县"
                   clearable
                 >
                   <el-option
-                    v-for="county in countyList"
-                    :key="county.xjXzqhDm"
-                    :label="county.xjXzqhMc"
-                    :value="county.xjXzqhDm"
+                    v-for="item in countyList"
+                    :key="item.xjXzqhDm"
+                    :label="item.xjXzqhMc"
+                    :value="item.xjXzqhDm"
                   />
                 </el-select>
-              </el-form-item>
-              <el-form-item
-                label="详细地址："
-                label-width="40%"
-                prop="orgAdress"
-                class="address-form-item"
+              </div>
+            </el-form-item>
+            <el-form-item label="详细地址">
+              <el-input v-model="form.orgAdress" placeholder="请输入详细地址" />
+            </el-form-item>
+          </div>
+
+          <!-- 右列 -->
+          <div class="form-col">
+            <el-form-item label="是否集团">
+              <el-select
+                v-model="form.isGroup"
+                placeholder="请选择"
+                style="width: 100%"
               >
-                <el-input
-                  v-model="from.orgAdress"
-                  autocomplete="off"
-                  style="width: 200%"
-                  class="full-width-input"
-                ></el-input>
-              </el-form-item>
-            </div>
+                <el-option label="是" value="Y" />
+                <el-option label="否" value="N" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="所属法人机构">
+              <el-input
+                v-model="form.corpOrg"
+                placeholder="请输入所属法人机构"
+              />
+            </el-form-item>
+            <el-form-item label="所属集团">
+              <el-input v-model="form.orgStatus" placeholder="请输入所属集团" />
+            </el-form-item>
+            <el-form-item label="机构排序号">
+              <el-input v-model="form.sortNo" placeholder="请输入机构排序号" />
+            </el-form-item>
+          </div>
+        </div>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submit">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
 
-            <div class="form-col">
-              <el-form-item label="是否集团：" label-width="40%">
-                <el-select
-                  v-model="from.isGroup"
-                  placeholder=""
-                  style="width: 70%"
-                >
-                  <el-option label="是" value="Y" />
-                  <el-option label="否" value="N" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="所属法人机构：" label-width="40%">
-                <el-input
-                  v-model="from.corpOrg"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="所属集团：" label-width="40%">
-                <el-input
-                  v-model="from.orgStatus"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="机构排序号：" label-width="40%">
-                <el-input
-                  v-model="from.sortNo"
-                  autocomplete="off"
-                  style="width: 70%"
-                ></el-input>
-              </el-form-item>
-            </div>
-          </div>
-        </el-form>
-        <template #footer>
-          <div class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取 消</el-button>
-            <el-button type="primary" @click="submit()">确 定</el-button>
-          </div>
-        </template>
-      </el-dialog>
-    </div>
-
-    <div>
-      <el-dialog
-        title="查询"
-        v-model="queryDialogFromFlag"
-        width="30%"
-        :close-on-click-modal="false"
-      >
-        <el-form :model="sysAdOrg">
-          <el-form-item label="机构名称：" label-width="25%">
-            <el-input
-              v-model="sysAdOrg.orgName"
-              autocomplete="off"
-              style="width: 50%"
-            ></el-input>
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <div class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取 消</el-button>
-            <el-button type="primary" @click="submit()">确 定</el-button>
-          </div>
-        </template>
-      </el-dialog>
-    </div>
+    <!-- 查询对话框 -->
+    <el-dialog
+      title="查询"
+      v-model="queryDialogVisible"
+      width="30%"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="queryParams" label-width="80px">
+        <el-form-item label="机构名称">
+          <el-input
+            v-model="queryParams.orgName"
+            placeholder="请输入机构名称"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="queryDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="querySubmit">查询</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
-<style>
-.tb-div button {
-  border: none;
-  background-color: transparent;
-  line-height: 0;
-  margin-right: 50px;
-  cursor: pointer;
-  color: #2962ff;
-}
+<style scoped>
+@import "@/utils/styles/button-group.scss";
 
-.tb-div i {
-  font-size: 18px;
-}
-
-.tb-div p {
-  font-size: 12px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.lb-div {
-  margin-top: 10px;
-}
-
-.el-dialog {
-  border-radius: 15px !important;
-  overflow: hidden;
-}
-
-.form-row {
+.location-wrapper {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  margin: 0 -10px;
 }
 
-.form-col {
-  flex: 0 0 25%;
-  padding: 0 10px;
-  box-sizing: border-box;
+/* 表格横向滚动 */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.location-select {
-  width: 70%;
+/* 滚动条样式 */
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #909399;
 }
 </style>
 
-<script>
+<style>
+.user-dialog .form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.user-dialog .form-col {
+  flex: 1;
+  min-width: 220px;
+  box-sizing: border-box;
+}
+</style>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from "vue";
+import { ElMessage, ElMessageBox, FormInstance } from "element-plus";
+import {
+  Search,
+  CirclePlus,
+  Edit,
+  Delete,
+  Download,
+  UploadFilled,
+} from "@element-plus/icons-vue";
 import request from "@/utils/request";
 
-export default {
-  computed: {
-    uploadUrl() {
-      return `${process.env.VUE_APP_API_BASE_URL}/sysAdOrg/importExcel`;
-    },
-  },
+// ============ 类型定义 ============
+interface SysAdOrg {
+  orgUuid?: string;
+  parentOrgUuid?: string;
+  orgCode?: string;
+  roleDesc?: string;
+  orgName?: string;
+  orgNameShort?: string;
+  orgEngName?: string;
+  areaCd?: string;
+  sjDm?: string;
+  shijDm?: string;
+  xjDm?: string;
+  orgAdress?: string;
+  postCode?: string;
+  email?: string;
+  contactTel?: string;
+  foundTime?: string;
+  legalPerson?: string;
+  isCorporate?: string;
+  isGroup?: string;
+  corpOrg?: string;
+  orgStatus?: string;
+  sortNo?: string;
+}
 
-  data() {
-    return {
-      sysAdOrg: {
-        orgName: "",
-        // userPhone: '',
-        pageNum: 1,
-        pageSize: 20,
-      },
-      tableData: [],
-      total: 0,
-      dialogFormVisible: false,
-      infoDialogFormVisible: false,
-      queryDialogFromFlag: false,
-      saveOrUpdateFlag: "",
-      saveOrUpdateTitle: "",
-      from: {},
-      originalData: {},
-      orgUuidIn: [],
-      dataBean: {},
-      token: JSON.parse(localStorage.getItem("user")).token,
-      orgMap: [],
-      roleMap: [],
-      provinceList: [], // 省级列表
-      cityList: [], // 市级列表
-      countyList: [], // 县级列表
-      rules: {
-        orgCode: [
-          { required: true, message: "请输入机构代码", trigger: "blur" },
-        ],
-        orgName: [
-          { required: true, message: "请输入机构名称", trigger: "blur" },
-        ],
-        userPassword: [
-          { required: true, message: "请输入用户密码", trigger: "blur" },
-        ],
+interface XzqhItem {
+  sjXzqhDm: string;
+  sjXzqhMc: string;
+  shijXzqhDm?: string;
+  shijXzqhMc?: string;
+  xjXzqhDm?: string;
+  xjXzqhMc?: string;
+  dmShijXzqhList?: XzqhItem[];
+  dmXjXzqhList?: XzqhItem[];
+}
 
-        userAge: [{ validator: this.validateAge, trigger: "blur" }],
-      },
-    };
-  },
+// ============ 常量 ============
+const uploadUrl = `${process.env.VUE_APP_API_BASE_URL}/sysAdOrg/importExcel`;
 
-  //页面加载的时候做一些事情
-  created() {
-    this.load();
-  },
-  //定义一些页面上的控件触发事件调用的方法
-  methods: {
-    load: function () {
-      this.queryPageList();
-      this.selectOrgCode2OrgNameMap();
-      this.selectListByBean();
-      this.selectXzqhList();
-    },
-
-    queryData() {
-      this.queryDialogFromFlag = true;
-    },
-
-    queryPageList() {
-      request.post("sysAdOrg/queryPageList", this.sysAdOrg).then((res) => {
-        if (res.code === 201) {
-          this.tableData = res.data.list;
-          this.total = res.data.total;
-          this.sysUser = {
-            orgName: "",
-            // userPhone: '',
-            pageNum: 1,
-            pageSize: 20,
-          };
-          this.queryDialogFromFlag = false;
-        } else {
-          this.$message.error(res.message);
-        }
-      });
-    },
-
-    reset() {
-      this.sysAdOrg = {
-        userName: "",
-        userPhone: "",
-        pageNum: 1,
-        pageSize: 20,
-      };
-      this.queryPageList();
-    },
-
-    handleSizeChange(pageSize) {
-      this.sysAdOrg.pageSize = pageSize;
-      this.queryPageList();
-    },
-
-    handleCurrentChange(pageNum) {
-      this.sysAdOrg.pageNum = pageNum;
-      this.queryPageList();
-    },
-
-    // 自定义年龄校验
-    validateAge(rule, value, callback) {
-      if (value !== null || value !== "") {
-        let num = Number(value);
-        console.log(num);
-        if (!Number.isInteger(num)) {
-          callback(new Error("年龄必须为整数"));
-        } else if (value < 0) {
-          callback(new Error("年龄不能为负数"));
-        } else if (value > 150) {
-          callback(new Error("年龄不能超过150岁"));
-        } else {
-          callback();
-        }
-      }
-    },
-
-    save() {
-      this.saveOrUpdateTitle = "新增";
-      this.from = {};
-      this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysAdOrg/save";
-    },
-
-    update() {
-      //省市区回显
-      this.getCityAndCountyList(this.dataBean.sjDm, this.dataBean.shijDm);
-
-      if (this.orgUuidIn.length === 0) {
-        this.$message.warning("请勾选您要修改的项！");
-        return;
-      }
-      if (this.orgUuidIn.length > 1) {
-        this.$message.warning("只能选择一条数据修改！");
-        return;
-      }
-
-      this.saveOrUpdateTitle = "修改";
-      this.from = JSON.parse(JSON.stringify(this.dataBean)); // 用副本进行编辑
-      this.originalData = JSON.parse(JSON.stringify(this.dataBean)); // 深拷贝原始数据
-      this.dialogFormVisible = true;
-      this.saveOrUpdateFlag = "sysAdOrg/update";
-    },
-
-    submit() {
-      this.$refs.formRef.validate((valid) => {
-        if (valid) {
-          request.post(this.saveOrUpdateFlag, this.from).then((res) => {
-            if (res.code === 201) {
-              this.$message({
-                message: res.message,
-                type: "success",
-              });
-              this.dialogFormVisible = false;
-              this.orgUuidIn = [];
-              this.reset();
-            } else {
-              this.$message.error(res.message);
-            }
-          });
-        } else {
-          this.$message.error("请完善信息");
-          return false;
-        }
-      });
-    },
-
-    deleteData(data) {
-      if (this.orgUuidIn.length === 0) {
-        this.$message.warning("请勾选您要删除的项！");
-        return;
-      }
-
-      data = {
-        orgUuidIn: this.orgUuidIn,
-      };
-      request.post("sysAdOrg/delete", data).then((res) => {
-        if (res.code === 201) {
-          this.$message({
-            message: res.message,
-            type: "success",
-          });
-          this.dialogFormVisible = false;
-          this.orgUuidIn = [];
-          this.reset();
-        } else {
-          this.$message.error(res.message);
-        }
-      });
-      this.reset();
-    },
-
-    excelData(excelData) {
-      excelData = {
-        orgName: this.sysAdOrg.orgName,
-        // userPhone: this.sysUser.userPhone,
-        orgUuidIn: this.orgUuidIn,
-      };
-
-      request.post("/sysAdOrg/exportExcel", excelData, {
-        responseType: "blob",
-      });
-    },
-
-    importData(res) {
-      if (res.code === 201) {
-        this.$message({
-          message: res.message,
-          type: "success",
-        });
-        this.reset();
-      } else {
-        this.$message.error(res.message);
-      }
-    },
-
-    handleSelectionChange(val) {
-      this.orgUuidIn = [];
-      // 遍历并收集UUID
-      val.forEach((item) => {
-        if (item.orgUuid) {
-          this.orgUuidIn.push(item.orgUuid);
-          this.dataBean = item;
-        }
-      });
-    },
-
-    selectOrgCode2OrgNameMap() {
-      request
-        .post("sysAdOrg/selectOrgCode2OrgNameMap", this.from)
-        .then((res) => {
-          if (res.code === 201) {
-            // 转换数据格式
-            this.orgMap = this.transformOrgData(res.data);
-          } else {
-            this.$message.error(res.message);
-          }
-        });
-    },
-
-    transformOrgData(data) {
-      return Object.keys(data).map((key) => {
-        return {
-          value: key,
-          label: data[key],
-        };
-      });
-    },
-
-    selectListByBean() {
-      request.post("sysRole/selectListByBean", this.from).then((res) => {
-        if (res.code === 201) {
-          this.roleMap = res.data.map((item) => ({
-            label: item.roleName,
-            value: item.roleUuid,
-          }));
-        } else {
-          this.$message.error(res.message);
-        }
-      });
-    },
-
-    selectXzqhList() {
-      request.post("dmSjXzqh/selectXzqhList", this.from).then((res) => {
-        if (res.code === 201) {
-          this.provinceList = res.data;
-        } else {
-          this.$message.error(res.message);
-        }
-      });
-    },
-
-    // 省级选择变化
-    handleProvinceChange(provinceCode) {
-      // 清空下级选择
-      this.from.shijDm = "";
-      this.from.xjDm = "";
-      this.cityList = [];
-      this.countyList = [];
-
-      if (!provinceCode) return;
-      this.getCityAndCountyList(provinceCode, null);
-    },
-
-    // 市级选择变化
-    handleCityChange(cityCode) {
-      // 清空区县选择
-      this.from.xjDm = "";
-      this.countyList = [];
-
-      if (!cityCode) return;
-      this.getCityAndCountyList(null, cityCode);
-    },
-
-    // 添加区县选择变化监听
-    handleCountyChange(countyCode) {
-      // 强制更新视图
-      this.$forceUpdate();
-    },
-
-    getCityAndCountyList(provinceCode, cityCode) {
-      if (provinceCode) {
-        // 查找选中的省份
-        const selectedProvince = this.provinceList.find(
-          (province) => province.sjXzqhDm === provinceCode
-        );
-
-        if (selectedProvince && selectedProvince.dmShijXzqhList) {
-          this.cityList = selectedProvince.dmShijXzqhList;
-        }
-      }
-
-      if (cityCode) {
-        // 查找选中的城市
-        const selectedCity = this.cityList.find(
-          (city) => city.shijXzqhDm === cityCode
-        );
-
-        if (selectedCity && selectedCity.dmXjXzqhList) {
-          this.countyList = selectedCity.dmXjXzqhList;
-        }
-      }
-    },
-  },
+// ============ 表格样式 ============
+const headerCellStyle = {
+  "text-align": "center",
+  "background-color": "#E3ECFF",
+  color: "#333333",
+  height: "35px",
+  padding: "0px",
 };
+const cellStyle = {
+  "text-align": "center",
+  color: "#333333",
+  height: "35px",
+  padding: "0px",
+};
+
+// ============ Token ============
+const token = ref("");
+try {
+  const userStr = localStorage.getItem("user");
+  if (userStr) {
+    const user = JSON.parse(userStr);
+    token.value = user?.token || "";
+  }
+} catch {
+  console.error("解析用户信息失败");
+}
+
+// ============ 响应式数据 ============
+const tableData = ref<SysAdOrg[]>([]);
+const total = ref(0);
+const selectedIds = ref<string[]>([]);
+const exportLoading = ref(false);
+const dialogVisible = ref(false);
+const dialogTitle = ref("新增");
+const isEdit = ref(false);
+const queryDialogVisible = ref(false);
+const formRef = ref<FormInstance | null>(null);
+
+// ============ 查询参数 ============
+const queryParams = reactive({
+  orgName: "",
+  pageNum: 1,
+  pageSize: 20,
+});
+
+// ============ 表单 ============
+const form = ref<SysAdOrg>({
+  orgUuid: "",
+  parentOrgUuid: "",
+  orgCode: "",
+  orgName: "",
+  orgNameShort: "",
+  orgEngName: "",
+  areaCd: "",
+  sjDm: "",
+  shijDm: "",
+  xjDm: "",
+  orgAdress: "",
+  postCode: "",
+  email: "",
+  contactTel: "",
+  foundTime: "",
+  legalPerson: "",
+  isCorporate: "",
+  isGroup: "",
+  corpOrg: "",
+  orgStatus: "",
+  sortNo: "",
+});
+
+// ============ 省市区数据 ============
+const provinceList = ref<XzqhItem[]>([]);
+const cityList = ref<XzqhItem[]>([]);
+const countyList = ref<XzqhItem[]>([]);
+
+// ============ 表单校验 ============
+const rules = {
+  orgCode: [{ required: true, message: "请输入机构代码", trigger: "blur" }],
+  orgName: [{ required: true, message: "请输入机构名称", trigger: "blur" }],
+};
+
+// ============ 方法 ============
+// 加载数据
+const loadData = async () => {
+  try {
+    const res = await request.post("sysAdOrg/queryPageList", queryParams);
+    if (res.code === 201) {
+      tableData.value = res.data.list || [];
+      total.value = res.data.total || 0;
+    } else {
+      ElMessage.error(res.message);
+    }
+  } catch {
+    ElMessage.error("加载数据失败");
+  }
+};
+
+// 加载省市区列表
+const selectXzqhList = async () => {
+  try {
+    const res = await request.post("dmSjXzqh/selectXzqhList", {});
+    if (res.code === 201) {
+      provinceList.value = res.data || [];
+    } else {
+      ElMessage.error(res.message);
+    }
+  } catch {
+    ElMessage.error("加载行政区划失败");
+  }
+};
+
+// ============ 省市区联动 ============
+// 省级选择变化
+const handleProvinceChange = (provinceCode: string) => {
+  // 清空下级选择
+  form.value.shijDm = "";
+  form.value.xjDm = "";
+  cityList.value = [];
+  countyList.value = [];
+
+  if (!provinceCode) return;
+
+  // 查找选中的省份
+  const selectedProvince = provinceList.value.find(
+    (item) => item.sjXzqhDm === provinceCode
+  );
+  if (selectedProvince?.dmShijXzqhList) {
+    cityList.value = selectedProvince.dmShijXzqhList;
+  }
+};
+
+// 市级选择变化
+const handleCityChange = (cityCode: string) => {
+  // 清空区县选择
+  form.value.xjDm = "";
+  countyList.value = [];
+
+  if (!cityCode) return;
+
+  // 查找选中的城市
+  const selectedCity = cityList.value.find(
+    (item) => item.shijXzqhDm === cityCode
+  );
+  if (selectedCity?.dmXjXzqhList) {
+    countyList.value = selectedCity.dmXjXzqhList;
+  }
+};
+
+// 修改时回显省市区
+const setLocationData = (sjDm: string, shijDm: string, xjDm: string) => {
+  // 先触发省级变化，加载市列表
+  if (sjDm) {
+    handleProvinceChange(sjDm);
+    // 再触发市级变化，加载区县列表
+    if (shijDm) {
+      handleCityChange(shijDm);
+    }
+  }
+  // 设置选中值
+  form.value.sjDm = sjDm || "";
+  form.value.shijDm = shijDm || "";
+  form.value.xjDm = xjDm || "";
+};
+
+// ============ 查询 ============
+const queryData = () => {
+  queryParams.orgName = "";
+  queryDialogVisible.value = true;
+};
+
+const querySubmit = () => {
+  queryParams.pageNum = 1;
+  loadData();
+  queryDialogVisible.value = false;
+};
+
+// ============ 新增 ============
+const save = () => {
+  isEdit.value = false;
+  dialogTitle.value = "新增";
+  form.value = {
+    orgUuid: "",
+    parentOrgUuid: "",
+    orgCode: "",
+    orgName: "",
+    orgNameShort: "",
+    orgEngName: "",
+    areaCd: "",
+    sjDm: "",
+    shijDm: "",
+    xjDm: "",
+    orgAdress: "",
+    postCode: "",
+    email: "",
+    contactTel: "",
+    foundTime: "",
+    legalPerson: "",
+    isCorporate: "",
+    isGroup: "",
+    corpOrg: "",
+    orgStatus: "",
+    sortNo: "",
+  };
+  // 清空省市区列表
+  cityList.value = [];
+  countyList.value = [];
+  dialogVisible.value = true;
+};
+
+// ============ 修改 ============
+const update = () => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning("请勾选要修改的项");
+    return;
+  }
+  if (selectedIds.value.length > 1) {
+    ElMessage.warning("只能选择一条数据修改");
+    return;
+  }
+  const row = tableData.value.find(
+    (item) => item.orgUuid === selectedIds.value[0]
+  );
+  if (!row) return;
+
+  isEdit.value = true;
+  dialogTitle.value = "修改";
+  form.value = { ...row };
+
+  // 回显省市区
+  setLocationData(row.sjDm || "", row.shijDm || "", row.xjDm || "");
+
+  dialogVisible.value = true;
+};
+
+// ============ 删除 ============
+const deleteData = async () => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning("请勾选要删除的项");
+    return;
+  }
+  try {
+    await ElMessageBox.confirm("确认删除选中的数据吗？", "提示", {
+      type: "warning",
+    });
+    const res = await request.post("sysAdOrg/delete", {
+      orgUuidIn: selectedIds.value,
+    });
+    if (res.code === 201) {
+      ElMessage.success("删除成功");
+      selectedIds.value = [];
+      loadData();
+    } else {
+      ElMessage.error(res.message);
+    }
+  } catch (e: any) {
+    if (e !== "cancel") console.error(e);
+  }
+};
+
+// ============ 提交表单 ============
+const submit = async () => {
+  if (!formRef.value) return;
+  try {
+    await formRef.value.validate();
+    const api = isEdit.value ? "sysAdOrg/update" : "sysAdOrg/save";
+    const res = await request.post(api, form.value);
+    if (res.code === 201) {
+      ElMessage.success(isEdit.value ? "修改成功" : "新增成功");
+      dialogVisible.value = false;
+      loadData();
+    } else {
+      ElMessage.error(res.message);
+    }
+  } catch {
+    ElMessage.error("保存失败");
+  }
+};
+
+// ============ 导出 ============
+const excelData = async () => {
+  if (exportLoading.value) return;
+  exportLoading.value = true;
+  try {
+    await request.post(
+      "sysAdOrg/exportExcel",
+      {
+        orgName: queryParams.orgName,
+        orgUuidIn: selectedIds.value,
+        pageNum: queryParams.pageNum,
+        pageSize: queryParams.pageSize,
+      },
+      {
+        responseType: "blob",
+        fileName: `机构数据_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace(/:/g, "-")}.xlsx`,
+      }
+    );
+    ElMessage.success("导出成功");
+  } catch {
+    ElMessage.error("导出失败");
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
+// ============ 导入 ============
+const importData = (res: any) => {
+  if (res.code === 201) {
+    ElMessage.success(res.message || "导入成功");
+    loadData();
+  } else {
+    ElMessage.error(res.message || "导入失败");
+  }
+};
+
+const handleImportError = (error: any) => {
+  console.error("导入失败", error);
+  ElMessage.error("导入失败，请检查文件格式");
+};
+
+// ============ 表格选中 ============
+const handleSelectionChange = (val: SysAdOrg[]) => {
+  selectedIds.value = val.map((item) => item.orgUuid || "").filter(Boolean);
+};
+
+// ============ 分页 ============
+const handleSizeChange = (size: number) => {
+  queryParams.pageSize = size;
+  loadData();
+};
+
+const handleCurrentChange = (page: number) => {
+  queryParams.pageNum = page;
+  loadData();
+};
+
+// ============ 生命周期 ============
+onMounted(() => {
+  loadData();
+  selectXzqhList();
+});
 </script>

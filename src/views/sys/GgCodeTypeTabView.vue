@@ -256,7 +256,7 @@
 </template>
 
 <style scoped>
-@import "@/styles/button-group.scss";
+@import "@/utils/styles/button-group.scss";
 </style>
 
 <style>

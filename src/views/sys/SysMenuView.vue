@@ -677,7 +677,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import "@/styles/button-group.scss";
+@import "@/utils/styles/button-group.scss";
 
 .tree-panel {
   width: 200px;

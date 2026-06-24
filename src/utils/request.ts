@@ -20,7 +20,7 @@ interface CustomRequestConfig extends AxiosRequestConfig {
 
 const service: AxiosInstance = axios.create({
   baseURL: process.env.VUE_APP_API_BASE_URL || "http://localhost:8888/pickle",
-  timeout: 50000,
+  timeout: 600000,
 });
 
 // 请求拦截器

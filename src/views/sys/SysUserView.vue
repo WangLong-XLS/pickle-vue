@@ -233,7 +233,7 @@
 </template>
 
 <style scoped>
-@import "@/styles/button-group.scss";
+@import "@/utils/styles/button-group.scss";
 </style>
 
 <style>
@@ -265,7 +265,19 @@ import {
   UploadFilled,
 } from "@element-plus/icons-vue";
 import request from "@/utils/request";
-import { SysUser } from "@/types/sys/sysUser";
+
+/** 菜单项类型（对应后端 SysMenu 实体） */
+export interface SysUser {
+  userUuid?: string;
+  userName?: string;
+  userPassword?: string;
+  userAge?: string;
+  userSex?: string;
+  userPhone?: string;
+  roleUuidIn?: string | string[];
+  orgUuidIn?: string | string[];
+  orgCode?: string;
+}
 
 // ---------- 常量 ----------
 const uploadUrl = `${process.env.VUE_APP_API_BASE_URL}/sysAdOrg/importExcel`;
